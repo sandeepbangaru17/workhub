@@ -1,34 +1,43 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Navbar() {
+  const { isAuthed, user, logout } = useAuth();
+
   return (
     <header className="border-b bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link to="/" className="text-lg font-bold tracking-tight">
+        <Link to="/" className="font-extrabold tracking-tight text-slate-900">
           WorkHub
         </Link>
 
-        <nav className="flex items-center gap-3 text-sm">
-          <Link
-            to="/businesses"
-            className="rounded-md px-3 py-2 hover:bg-slate-100"
-          >
+        <nav className="flex items-center gap-4 text-sm">
+          <NavLink className="text-slate-700 hover:text-slate-900" to="/businesses">
             Businesses
-          </Link>
+          </NavLink>
 
-          <Link
-            to="/login"
-            className="rounded-md px-3 py-2 hover:bg-slate-100"
-          >
-            Login
-          </Link>
-
-          <Link
-            to="/register"
-            className="rounded-md bg-slate-900 px-3 py-2 text-white hover:bg-slate-800"
-          >
-            Register
-          </Link>
+          {!isAuthed ? (
+            <>
+              <NavLink className="text-slate-700 hover:text-slate-900" to="/login">
+                Login
+              </NavLink>
+              <NavLink className="rounded-lg bg-slate-900 px-3 py-1.5 font-semibold text-white hover:bg-slate-800" to="/register">
+                Register
+              </NavLink>
+            </>
+          ) : (
+            <>
+              <span className="hidden text-slate-600 sm:inline">
+                {user?.name} ({user?.role})
+              </span>
+              <button
+                onClick={logout}
+                className="rounded-lg border px-3 py-1.5 font-semibold text-slate-900 hover:bg-slate-50"
+              >
+                Logout
+              </button>
+            </>
+          )}
         </nav>
       </div>
     </header>

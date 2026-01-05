@@ -1,22 +1,39 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { api } from "../api";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e) => {
+  const nav = useNavigate();
+  const auth = useAuth();
+
+  const onSubmit = async (e) => {
     e.preventDefault();
-    alert("UI only ✅ (Next step we connect backend)");
+    setErr("");
+    setLoading(true);
+    try {
+      const data = await api.login(phone, password);
+      auth.login({ token: data.token, user: data.user });
+      nav("/businesses");
+    } catch (e2) {
+      setErr(e2.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="mx-auto max-w-md">
       <div className="rounded-2xl border bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold">Login</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Welcome back. Please enter your details.
-        </p>
+        <p className="mt-1 text-sm text-slate-600">Welcome back. Please enter your details.</p>
+
+        {err && <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>}
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div>
@@ -42,8 +59,11 @@ export default function Login() {
             />
           </div>
 
-          <button className="w-full rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white hover:bg-slate-800">
-            Login
+          <button
+            disabled={loading}
+            className="w-full rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+          >
+            {loading ? "Logging in..." : "Login"}
           </button>
 
           <p className="text-center text-sm text-slate-600">
