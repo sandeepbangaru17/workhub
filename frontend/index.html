@@ -1,13 +1,688 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WorkHub • Connect Businesses & Workers</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1b33;
+      --card:#121f3b;
+      --muted:#8aa0c6;
+      --text:#eaf2ff;
+      --line:rgba(138,160,198,.25);
+      --brand:#4aa3ff;
+      --ok:#2ce38a;
+      --warn:#ffcc66;
+      --bad:#ff6b6b;
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+      --r:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1000px 600px at 10% -10%, rgba(74,163,255,.25), transparent 60%),
+                  radial-gradient(900px 600px at 110% 0%, rgba(44,227,138,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:22px}
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px 16px;border:1px solid var(--line);border-radius:20px;background:rgba(15,27,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      position: sticky; top: 12px; z-index: 20;
+    }
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(74,163,255,.95), rgba(44,227,138,.9));
+      box-shadow: 0 10px 25px rgba(74,163,255,.25);
+    }
+    .brand h1{font-size:18px;margin:0;line-height:1.1}
+    .brand p{margin:0;color:var(--muted);font-size:12px}
+    .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .pill{
+      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(18,31,59,.65);color:var(--muted);font-size:12px
+    }
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(18,31,59,.75);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:.15s;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: rgba(74,163,255,.55)}
+    .btn.primary{background: rgba(74,163,255,.15); border-color: rgba(74,163,255,.55)}
+    .btn.ok{background: rgba(44,227,138,.12); border-color: rgba(44,227,138,.55)}
+    .btn.bad{background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.55)}
+    .grid{
+      display:grid;gap:16px;margin-top:18px;
+      grid-template-columns: 1.1fr .9fr;
+    }
+    @media(max-width: 980px){ .grid{grid-template-columns:1fr} header{position:static} }
+    .card{
+      border:1px solid var(--line);
+      background: rgba(18,31,59,.6);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 16px;border-bottom:1px solid var(--line);
+      display:flex;justify-content:space-between;align-items:center;gap:10px
+    }
+    .card .hd h2{margin:0;font-size:14px;letter-spacing:.2px}
+    .card .bd{padding:16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .field{flex:1;min-width:200px}
+    label{display:block;color:var(--muted);font-size:12px;margin:0 0 6px}
+    input, select, textarea{
+      width:100%;
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(11,18,32,.65);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:90px;resize:vertical}
+    .help{color:var(--muted);font-size:12px;margin-top:10px}
+    .msg{margin-top:10px;font-size:13px}
+    .msg.ok{color:var(--ok)}
+    .msg.bad{color:var(--bad)}
+    .table{
+      width:100%;
+      border-collapse: collapse;
+      font-size:13px;
+    }
+    .table th, .table td{
+      border-bottom:1px solid var(--line);
+      padding:10px 8px;
+      text-align:left;
+      vertical-align:top;
+    }
+    .table th{color:var(--muted);font-weight:600}
+    .tag{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:5px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);
+      background: rgba(11,18,32,.5); color: var(--muted);
+    }
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--muted)}
+    .dot.ready{background:var(--ok)}
+    .dot.busy{background:var(--warn)}
+    .dot.pending{background:var(--muted)}
+    .muted{color:var(--muted)}
+    .sep{height:1px;background:var(--line);margin:14px 0}
+    .kpi{display:flex;gap:10px;flex-wrap:wrap}
+    .kpi .box{
+      flex:1;min-width:160px;padding:12px;border:1px solid var(--line);
+      border-radius:14px;background:rgba(11,18,32,.45)
+    }
+    .kpi .box b{font-size:18px}
+    .kpi .box div{color:var(--muted);font-size:12px;margin-top:4px}
+    a{color:var(--brand);text-decoration:none}
+    a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>WorkHub</h1>
+          <p>Businesses ↔ Workers • Simple, role-based, city-ready</p>
+        </div>
+      </div>
+      <div class="right">
+        <span class="pill" id="pill">Not logged in</span>
+        <button class="btn" id="btnLogout" style="display:none">Logout</button>
+        <button class="btn primary" id="btnRefresh">Refresh Data</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: Public browsing -->
+      <div class="card">
+        <div class="hd">
+          <h2>Browse</h2>
+          <span class="tag"><span class="dot pending"></span> Live Data</span>
+        </div>
+        <div class="bd">
+          <div class="kpi">
+            <div class="box">
+              <b id="kpiBusinesses">0</b>
+              <div>Businesses</div>
+            </div>
+            <div class="box">
+              <b id="kpiWorkers">0</b>
+              <div>Workers</div>
+            </div>
+            <div class="box">
+              <b id="kpiReady">0</b>
+              <div>Ready now</div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="row">
+            <div class="field">
+              <label>Filter workers by business</label>
+              <select id="filterBusiness"></select>
+            </div>
+            <div class="field">
+              <label>Filter by status</label>
+              <select id="filterStatus">
+                <option value="">All</option>
+                <option value="ready">Ready</option>
+                <option value="busy">Busy</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+            <div class="field" style="min-width:160px">
+              <label>&nbsp;</label>
+              <button class="btn primary" id="btnLoadWorkers">Load Workers</button>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Businesses</h3>
+          <table class="table" id="tblBusinesses">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Owner</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="sep"></div>
+
+          <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Workers</h3>
+          <table class="table" id="tblWorkers">
+            <thead>
+              <tr>
+                <th>Worker</th>
+                <th>Skills</th>
+                <th>Status</th>
+                <th>Rating</th>
+                <th>Contact</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="help">Backend API: <span class="muted">http://127.0.0.1:5001</span> • Postgres Port: <span class="muted">5433</span></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Auth + Role Panels -->
+      <div class="card">
+        <div class="hd">
+          <h2>Account</h2>
+          <span class="tag" id="roleTag"><span class="dot pending"></span> Guest</span>
+        </div>
+
+        <div class="bd">
+          <!-- LOGIN -->
+          <div id="loginBox">
+            <div class="row">
+              <div class="field">
+                <label>Email</label>
+                <input id="loginEmail" placeholder="admin@workhub.local" />
+              </div>
+              <div class="field">
+                <label>Password</label>
+                <input id="loginPass" type="password" placeholder="••••" />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="btnLogin">Login</button>
+              <button class="btn" id="btnFillAdmin">Use Admin</button>
+            </div>
+            <div class="msg" id="loginMsg"></div>
+
+            <div class="sep"></div>
+
+            <!-- REGISTER -->
+            <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Create account</h3>
+            <div class="row">
+              <div class="field">
+                <label>Role</label>
+                <select id="regRole">
+                  <option value="owner">Business Owner</option>
+                  <option value="worker">Worker</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Name</label>
+                <input id="regName" placeholder="Your name" />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <div class="field">
+                <label>Phone</label>
+                <input id="regPhone" placeholder="Optional" />
+              </div>
+              <div class="field">
+                <label>Email</label>
+                <input id="regEmail" placeholder="you@email.com" />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <div class="field">
+                <label>Password</label>
+                <input id="regPass" type="password" placeholder="min 4 chars" />
+              </div>
+              <div class="field" style="min-width:160px">
+                <label>&nbsp;</label>
+                <button class="btn ok" id="btnRegister">Register</button>
+              </div>
+            </div>
+            <div class="msg" id="regMsg"></div>
+          </div>
+
+          <!-- OWNER PANEL -->
+          <div id="ownerPanel" style="display:none">
+            <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Business Owner</h3>
+
+            <div class="row">
+              <div class="field">
+                <label>Business name</label>
+                <input id="bizName" placeholder="Example: Pragna Constructions" />
+              </div>
+              <div class="field">
+                <label>Category</label>
+                <input id="bizCategory" placeholder="Construction / Hotel / Retail..." />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <div class="field">
+                <label>Location</label>
+                <input id="bizLocation" placeholder="Visakhapatnam" />
+              </div>
+              <div class="field" style="min-width:160px">
+                <label>&nbsp;</label>
+                <button class="btn ok" id="btnCreateBiz">Create Business</button>
+              </div>
+            </div>
+            <div class="msg" id="ownerMsg"></div>
+
+            <div class="sep"></div>
+
+            <div class="row" style="align-items:center;justify-content:space-between">
+              <h3 style="margin:0;font-size:13px;color:var(--muted);font-weight:600">Pending worker requests</h3>
+              <button class="btn" id="btnLoadPending">Load</button>
+            </div>
+
+            <table class="table" id="tblPending">
+              <thead>
+                <tr>
+                  <th>Business</th>
+                  <th>Worker</th>
+                  <th>Contact</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <!-- WORKER PANEL -->
+          <div id="workerPanel" style="display:none">
+            <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Worker</h3>
+
+            <div class="row">
+              <div class="field">
+                <label>Skills</label>
+                <input id="wSkills" placeholder="Plumbing, Electrician, Mason..." />
+              </div>
+              <div class="field">
+                <label>Experience (years)</label>
+                <input id="wExp" type="number" min="0" value="0" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+              <div class="field">
+                <label>Location</label>
+                <input id="wLoc" placeholder="Visakhapatnam" />
+              </div>
+              <div class="field" style="min-width:160px">
+                <label>&nbsp;</label>
+                <button class="btn ok" id="btnSaveProfile">Save Profile</button>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+              <div class="field">
+                <label>Status</label>
+                <select id="wStatus">
+                  <option value="pending">Pending</option>
+                  <option value="ready">Ready</option>
+                  <option value="busy">Busy</option>
+                </select>
+              </div>
+              <div class="field" style="min-width:160px">
+                <label>&nbsp;</label>
+                <button class="btn primary" id="btnSetStatus">Update Status</button>
+              </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="row">
+              <div class="field">
+                <label>Register under a business</label>
+                <select id="wBusiness"></select>
+              </div>
+              <div class="field" style="min-width:160px">
+                <label>&nbsp;</label>
+                <button class="btn" id="btnReqBiz">Request</button>
+              </div>
+            </div>
+
+            <div class="msg" id="workerMsg"></div>
+          </div>
+
+          <!-- ADMIN NOTE (for now admin is read-only in UI) -->
+          <div id="adminNote" style="display:none">
+            <div class="sep"></div>
+            <div class="tag"><span class="dot ready"></span> Admin logged in</div>
+            <div class="help">Admin APIs can be added next (approve workers globally, manage all businesses). Keeping it simple for now.</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const API = "http://127.0.0.1:5000";
+
+  const $ = (id) => document.getElementById(id);
+
+  const state = {
+    user: JSON.parse(localStorage.getItem("workhub_user") || "null"),
+    businesses: [],
+    workers: []
+  };
+
+  function setMsg(id, text, ok=true){
+    const el = $(id);
+    el.textContent = text || "";
+    el.className = "msg " + (ok ? "ok" : "bad");
+  }
+
+  function setRoleUI(){
+    const pill = $("pill");
+    const roleTag = $("roleTag");
+    const btnLogout = $("btnLogout");
+
+    $("loginBox").style.display = state.user ? "none" : "block";
+    $("ownerPanel").style.display = (state.user?.role === "owner") ? "block" : "none";
+    $("workerPanel").style.display = (state.user?.role === "worker") ? "block" : "none";
+    $("adminNote").style.display = (state.user?.role === "admin") ? "block" : "none";
+
+    if(!state.user){
+      pill.textContent = "Not logged in";
+      roleTag.innerHTML = `<span class="dot pending"></span> Guest`;
+      btnLogout.style.display = "none";
+      return;
+    }
+
+    btnLogout.style.display = "inline-block";
+    pill.textContent = `${state.user.name} • ${state.user.role.toUpperCase()}`;
+
+    const dotClass = state.user.role === "worker" ? "busy" : state.user.role === "owner" ? "ready" : "pending";
+    roleTag.innerHTML = `<span class="dot ${dotClass}"></span> ${state.user.role.toUpperCase()}`;
+  }
+
+  async function api(path, method="GET", body=null){
+    const opts = { method, headers: { "Content-Type": "application/json" } };
+    if(body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
+    if(!res.ok) throw new Error(data.error || "Request failed");
+    return data;
+  }
+
+  async function loadBusinesses(){
+    const data = await api("/api/businesses");
+    state.businesses = data.items || [];
+    $("kpiBusinesses").textContent = state.businesses.length;
+
+    // table
+    const tb = $("tblBusinesses").querySelector("tbody");
+    tb.innerHTML = state.businesses.map(b => `
+      <tr>
+        <td><b>${escapeHtml(b.name)}</b></td>
+        <td>${escapeHtml(b.category || "-")}</td>
+        <td>${escapeHtml(b.location || "-")}</td>
+        <td class="muted">${escapeHtml(b.owner_name || "-")}</td>
+      </tr>
+    `).join("");
+
+    // filter dropdowns
+    const opt = [`<option value="">All businesses</option>`].concat(
+      state.businesses.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`)
+    ).join("");
+
+    $("filterBusiness").innerHTML = opt;
+    $("wBusiness").innerHTML = state.businesses.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+  }
+
+  async function loadWorkers(){
+    const status = $("filterStatus").value;
+    const businessId = $("filterBusiness").value;
+
+    const qs = new URLSearchParams();
+    if(status) qs.set("status", status);
+    if(businessId) qs.set("business_id", businessId);
+
+    const data = await api("/api/workers" + (qs.toString() ? `?${qs}` : ""));
+    state.workers = data.items || [];
+
+    $("kpiWorkers").textContent = state.workers.length;
+    $("kpiReady").textContent = state.workers.filter(w => w.status === "ready").length;
+
+    const tb = $("tblWorkers").querySelector("tbody");
+    tb.innerHTML = state.workers.map(w => `
+      <tr>
+        <td>
+          <b>${escapeHtml(w.name)}</b><br/>
+          <span class="muted">${escapeHtml(w.location || "")}</span>
+        </td>
+        <td>${escapeHtml(w.skills || "-")}<br/><span class="muted">${escapeHtml(String(w.experience_years||0))} yrs</span></td>
+        <td>${statusTag(w.status)}</td>
+        <td><b>${escapeHtml(String(w.avg_rating||0))}</b> <span class="muted">(${escapeHtml(String(w.rating_count||0))})</span></td>
+        <td class="muted">${escapeHtml(w.phone || "-")}<br/>${escapeHtml(w.email || "")}</td>
+      </tr>
+    `).join("");
+  }
+
+  function statusTag(status){
+    const cls = status === "ready" ? "ready" : status === "busy" ? "busy" : "pending";
+    const label = status ? status.toUpperCase() : "UNKNOWN";
+    return `<span class="tag"><span class="dot ${cls}"></span>${label}</span>`;
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  // ------- Auth Handlers -------
+  $("btnFillAdmin").onclick = () => {
+    $("loginEmail").value = "admin@workhub.local";
+    $("loginPass").value = "admin123";
+  };
+
+  $("btnLogin").onclick = async () => {
+    setMsg("loginMsg","",true);
+    try{
+      const email = $("loginEmail").value.trim();
+      const password = $("loginPass").value;
+      const data = await api("/api/login","POST",{email,password});
+      state.user = data.user;
+      localStorage.setItem("workhub_user", JSON.stringify(state.user));
+      setRoleUI();
+      setMsg("loginMsg","Logged in successfully ✅",true);
+      await refreshAll();
+    }catch(e){
+      setMsg("loginMsg", e.message, false);
+    }
+  };
+
+  $("btnRegister").onclick = async () => {
+    setMsg("regMsg","",true);
+    try{
+      const role = $("regRole").value;
+      const name = $("regName").value.trim();
+      const phone = $("regPhone").value.trim();
+      const email = $("regEmail").value.trim();
+      const password = $("regPass").value;
+      await api("/api/register","POST",{role,name,phone,email,password});
+      setMsg("regMsg","Account created ✅ Now login.",true);
+    }catch(e){
+      setMsg("regMsg", e.message, false);
+    }
+  };
+
+  $("btnLogout").onclick = () => {
+    state.user = null;
+    localStorage.removeItem("workhub_user");
+    setRoleUI();
+  };
+
+  // ------- Owner -------
+  $("btnCreateBiz").onclick = async () => {
+    setMsg("ownerMsg","",true);
+    try{
+      const name = $("bizName").value.trim();
+      const category = $("bizCategory").value.trim();
+      const location = $("bizLocation").value.trim();
+      const owner_id = state.user.id;
+      await api("/api/owner/businesses","POST",{owner_id,name,category,location});
+      setMsg("ownerMsg","Business created ✅",true);
+      $("bizName").value = "";
+      $("bizCategory").value = "";
+      $("bizLocation").value = "";
+      await refreshAll();
+    }catch(e){
+      setMsg("ownerMsg", e.message, false);
+    }
+  };
+
+  $("btnLoadPending").onclick = async () => {
+    await loadPending();
+  };
+
+  async function loadPending(){
+    const tb = $("tblPending").querySelector("tbody");
+    tb.innerHTML = "";
+    try{
+      const data = await api(`/api/owner/pending_requests?owner_id=${encodeURIComponent(state.user.id)}`);
+      const items = data.items || [];
+      tb.innerHTML = items.map(r => `
+        <tr>
+          <td><b>${escapeHtml(r.business_name)}</b></td>
+          <td>${escapeHtml(r.worker_name)}</td>
+          <td class="muted">${escapeHtml(r.phone||"-")}<br/>${escapeHtml(r.email||"")}</td>
+          <td>
+            <button class="btn ok" data-approve="${r.request_id}">Approve</button>
+          </td>
+        </tr>
+      `).join("");
+
+      tb.querySelectorAll("[data-approve]").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const request_id = btn.getAttribute("data-approve");
+          await api("/api/owner/approve_request","POST",{owner_id: state.user.id, request_id});
+          await loadPending();
+          await loadWorkers();
+        });
+      });
+
+    }catch(e){
+      tb.innerHTML = `<tr><td colspan="4" class="muted">${escapeHtml(e.message)}</td></tr>`;
+    }
+  }
+
+  // ------- Worker -------
+  $("btnSaveProfile").onclick = async () => {
+    setMsg("workerMsg","",true);
+    try{
+      const user_id = state.user.id;
+      const skills = $("wSkills").value.trim();
+      const experience_years = parseInt($("wExp").value || "0", 10);
+      const location = $("wLoc").value.trim();
+      await api("/api/worker/profile","POST",{user_id,skills,experience_years,location});
+      setMsg("workerMsg","Profile saved ✅",true);
+      await loadWorkers();
+    }catch(e){
+      setMsg("workerMsg", e.message, false);
+    }
+  };
+
+  $("btnSetStatus").onclick = async () => {
+    setMsg("workerMsg","",true);
+    try{
+      const user_id = state.user.id;
+      const status = $("wStatus").value;
+      await api("/api/worker/status","POST",{user_id,status});
+      setMsg("workerMsg","Status updated ✅",true);
+      await loadWorkers();
+    }catch(e){
+      setMsg("workerMsg", e.message, false);
+    }
+  };
+
+  $("btnReqBiz").onclick = async () => {
+    setMsg("workerMsg","",true);
+    try{
+      const worker_user_id = state.user.id;
+      const business_id = $("wBusiness").value;
+      await api("/api/worker/register_business","POST",{worker_user_id,business_id});
+      setMsg("workerMsg","Request sent ✅ (Owner must approve)",true);
+    }catch(e){
+      setMsg("workerMsg", e.message, false);
+    }
+  };
+
+  // ------- Public -------
+  $("btnLoadWorkers").onclick = async () => { await loadWorkers(); };
+  $("btnRefresh").onclick = async () => { await refreshAll(); };
+
+  async function refreshAll(){
+    try{
+      await loadBusinesses();
+      await loadWorkers();
+      if(state.user?.role === "owner") await loadPending();
+    }catch(e){
+      // ignore
+    }
+  }
+
+  // init
+  (async function(){
+    setRoleUI();
+    $("filterBusiness").innerHTML = `<option value="">All businesses</option>`;
+    await refreshAll();
+  })();
+</script>
+</body>
 </html>
