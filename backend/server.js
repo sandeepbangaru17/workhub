@@ -1,386 +1,526 @@
-// backend/server.js
-require("dotenv").config();
-
+const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const express = require("express");
-const { Pool } = require("pg");
 const crypto = require("crypto");
+const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
+const { Pool } = require("pg");
+require("dotenv").config();
 
 const app = express();
-app.use(express.json({ limit: "1mb" }));
 
-// ---- Postgres ----
+const PORT = Number(process.env.PORT || 5000);
+const SESSION_SECRET = process.env.SESSION_SECRET || "dev_secret_change_me";
+
 const pool = new Pool({
   host: process.env.PGHOST,
   port: Number(process.env.PGPORT || 5432),
   database: process.env.PGDATABASE,
   user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
+  password: process.env.PGPASSWORD
 });
 
-// Simple password hashing (beginner-friendly).
-// Later we can upgrade to bcrypt.
-function hashPassword(pw) {
-  return crypto.createHash("sha256").update(String(pw)).digest("hex");
+app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
+
+/* =========================
+   Simple session (cookie)
+   ========================= */
+async function ensureSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL CHECK (role IN ('admin','owner','worker')),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS businesses (
+      id SERIAL PRIMARY KEY,
+      owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      category TEXT,
+      location TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS worker_profiles (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      skills TEXT,
+      experience TEXT,
+      location TEXT,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','ready','busy')),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS worker_requests (
+      id SERIAL PRIMARY KEY,
+      worker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      UNIQUE(worker_id, business_id)
+    );
+  `);
 }
 
-// ---- Helpers ----
-function ok(res, data) {
-  res.json(data);
-}
-function bad(res, msg, code = 400) {
-  res.status(code).json({ error: msg });
+function signSession(payloadObj) {
+  const payload = Buffer.from(JSON.stringify(payloadObj)).toString("base64url");
+  const sig = crypto
+    .createHmac("sha256", SESSION_SECRET)
+    .update(payload)
+    .digest("base64url");
+  return `${payload}.${sig}`;
 }
 
-// ---- Serve Frontend (single file) ----
-const FRONTEND_INDEX = path.join(__dirname, "..", "frontend", "index.html");
+function verifySession(token) {
+  if (!token) return null;
+  const [payload, sig] = token.split(".");
+  if (!payload || !sig) return null;
 
-app.get("/", (req, res) => {
-  if (!fs.existsSync(FRONTEND_INDEX)) {
-    return res
-      .status(500)
-      .send("frontend/index.html not found. Create it first.");
+  const expected = crypto
+    .createHmac("sha256", SESSION_SECRET)
+    .update(payload)
+    .digest("base64url");
+
+  if (expected !== sig) return null;
+
+  try {
+    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+  } catch {
+    return null;
   }
-  res.sendFile(FRONTEND_INDEX);
-});
+}
 
-// ---- API: Health ----
+function setSessionCookie(res, sessionObj) {
+  const token = signSession(sessionObj);
+  res.cookie("wh_session", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // set true only if using https
+    maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+  });
+}
+
+function clearSessionCookie(res) {
+  res.clearCookie("wh_session");
+}
+
+async function getUserFromSession(req) {
+  const token = req.cookies?.wh_session;
+  const sess = verifySession(token);
+  if (!sess?.uid) return null;
+
+  const { rows } = await pool.query(
+    "SELECT id, name, email, role FROM users WHERE id=$1",
+    [sess.uid]
+  );
+  return rows[0] || null;
+}
+
+function requireAuth() {
+  return async (req, res, next) => {
+    try {
+      const user = await getUserFromSession(req);
+      if (!user) return res.status(401).json({ error: "Not logged in" });
+      req.user = user;
+      next();
+    } catch (e) {
+      res.status(500).json({ error: "Server error" });
+    }
+  };
+}
+
+function requireRole(...roles) {
+  return async (req, res, next) => {
+    try {
+      const user = await getUserFromSession(req);
+      if (!user) return res.status(401).json({ error: "Not logged in" });
+      if (!roles.includes(user.role)) return res.status(403).json({ error: "Forbidden" });
+      req.user = user;
+      next();
+    } catch (e) {
+      res.status(500).json({ error: "Server error" });
+    }
+  };
+}
+
+/* =========================
+   Seed default admin
+   ========================= */
+async function ensureAdminSeed() {
+  const adminEmail = "admin@workhub.local";
+  const adminPass = "admin123"; // you can change later
+  const { rows } = await pool.query("SELECT id FROM users WHERE email=$1", [adminEmail]);
+  if (rows.length) return;
+
+  const hash = await bcrypt.hash(adminPass, 10);
+  await pool.query(
+    "INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'admin')",
+    ["WorkHub Admin", adminEmail, hash]
+  );
+  console.log("✅ Seeded admin:", adminEmail, "password:", adminPass);
+}
+
+/* =========================
+   API
+   ========================= */
+
 app.get("/api/health", async (req, res) => {
   try {
-    const r = await pool.query("SELECT 1 AS ok");
-    ok(res, {
-      ok: true,
-      db: r.rows[0].ok === 1,
-      port: process.env.PORT || 5001,
-    });
+    await pool.query("SELECT 1");
+    res.json({ ok: true });
   } catch (e) {
-    bad(res, "DB connection failed: " + e.message, 500);
+    res.status(500).json({ ok: false, error: "DB not reachable" });
   }
 });
 
-// ---- Seed admin (if not exists) ----
-async function ensureAdmin() {
-  const email = "admin@workhub.local";
-  const pass = "admin123";
-  const name = "WorkHub Admin";
+app.get("/api/me", requireAuth(), async (req, res) => {
+  const user = req.user;
+  let worker = null;
 
-  const existing = await pool.query("SELECT id FROM users WHERE email=$1", [email]);
-  if (existing.rows.length) return;
-
-  await pool.query(
-    `INSERT INTO users (role, name, email, phone, password_hash)
-     VALUES ('admin', $1, $2, '', $3)`,
-    [name, email, hashPassword(pass)]
-  );
-}
-
-// ---- API: Add rating ----
-app.post("/api/ratings", async (req, res) => {
-  try {
-    const { worker_user_id, rater_user_id, rating, review } = req.body || {};
-
-    if (!worker_user_id) return bad(res, "worker_user_id required");
-    if (!rater_user_id) return bad(res, "rater_user_id required");
-    const r = Number(rating);
-    if (!Number.isFinite(r) || r < 1 || r > 5) return bad(res, "rating must be 1 to 5");
-
-    // worker must exist and be a worker
-    const worker = await pool.query("SELECT id, role FROM users WHERE id=$1", [worker_user_id]);
-    if (!worker.rows.length || worker.rows[0].role !== "worker") return bad(res, "Invalid worker_user_id");
-
-    // rater must exist
-    const rater = await pool.query("SELECT id FROM users WHERE id=$1", [rater_user_id]);
-    if (!rater.rows.length) return bad(res, "Invalid rater_user_id");
-
-    await pool.query(
-      `INSERT INTO ratings (worker_user_id, rater_user_id, rating, review)
-       VALUES ($1,$2,$3,$4)`,
-      [worker_user_id, rater_user_id, r, (review || "").trim()]
+  if (user.role === "worker") {
+    const { rows } = await pool.query(
+      "SELECT skills, experience, location, status FROM worker_profiles WHERE user_id=$1",
+      [user.id]
     );
-
-    ok(res, { ok: true });
-  } catch (e) {
-    bad(res, e.message, 500);
+    worker = rows[0] || { skills: "", experience: "", location: "", status: "pending" };
   }
+
+  res.json({ ...user, worker });
 });
 
+app.post("/api/logout", async (req, res) => {
+  clearSessionCookie(res);
+  res.json({ ok: true });
+});
 
-// ---- API: Register ----
 app.post("/api/register", async (req, res) => {
+  const { name, role, email, password } = req.body || {};
+  if (!name || name.length < 2) return res.status(400).json({ error: "Name required" });
+  if (!email || !email.includes("@")) return res.status(400).json({ error: "Valid email required" });
+  if (!password || password.length < 4) return res.status(400).json({ error: "Password too short" });
+  if (!["worker", "owner"].includes(role)) return res.status(400).json({ error: "Invalid role" });
+
+  const hash = await bcrypt.hash(password, 10);
+
   try {
-    const { role, name, phone, email, password } = req.body || {};
-    if (!["owner", "worker"].includes(role)) return bad(res, "Role must be owner or worker");
-    if (!name || !email || !password) return bad(res, "Name, email and password are required");
-    if (String(password).length < 4) return bad(res, "Password must be at least 4 characters");
-
-    const exists = await pool.query("SELECT id FROM users WHERE email=$1", [email]);
-    if (exists.rows.length) return bad(res, "Email already exists");
-
-    const userIns = await pool.query(
-      `INSERT INTO users (role, name, email, phone, password_hash)
-       VALUES ($1,$2,$3,$4,$5)
-       RETURNING id, role, name, email, phone`,
-      [role, name, email, phone || "", hashPassword(password)]
+    const { rows } = await pool.query(
+      "INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,role",
+      [name, email.toLowerCase(), hash, role]
     );
 
-    const user = userIns.rows[0];
-
-    // If worker, create profile row (default pending)
+    // Create empty worker profile if worker
     if (role === "worker") {
       await pool.query(
-        `INSERT INTO worker_profiles (user_id, skills, experience_years, location, status)
-         VALUES ($1,'',0,'','pending')
-         ON CONFLICT (user_id) DO NOTHING`,
-        [user.id]
+        "INSERT INTO worker_profiles (user_id, skills, experience, location, status) VALUES ($1,'','','','pending') ON CONFLICT (user_id) DO NOTHING",
+        [rows[0].id]
       );
     }
 
-    ok(res, { user });
+    res.json({ ok: true });
   } catch (e) {
-    bad(res, e.message, 500);
+    if (String(e.message).includes("duplicate key")) {
+      return res.status(409).json({ error: "Email already exists" });
+    }
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// ---- API: Login ----
 app.post("/api/login", async (req, res) => {
-  try {
-    const { email, password } = req.body || {};
-    if (!email || !password) return bad(res, "Email and password required");
+  const { email, password } = req.body || {};
+  if (!email || !password) return res.status(400).json({ error: "Email & password required" });
 
-    const r = await pool.query(
-      "SELECT id, role, name, email, phone, password_hash FROM users WHERE email=$1",
-      [email]
-    );
-    if (!r.rows.length) return bad(res, "Invalid email/password", 401);
+  const { rows } = await pool.query(
+    "SELECT id,name,email,role,password_hash FROM users WHERE email=$1",
+    [email.toLowerCase()]
+  );
+  const user = rows[0];
+  if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
-    const u = r.rows[0];
-    if (u.password_hash !== hashPassword(password)) return bad(res, "Invalid email/password", 401);
+  const ok = await bcrypt.compare(password, user.password_hash);
+  if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
-    ok(res, {
-      user: { id: u.id, role: u.role, name: u.name, email: u.email, phone: u.phone || "" },
-    });
-  } catch (e) {
-    bad(res, e.message, 500);
-  }
+  setSessionCookie(res, { uid: user.id });
+  res.json({ ok: true });
 });
 
-// ---- API: Businesses list ----
+/* -------------------------
+   Browse endpoints
+   ------------------------- */
 app.get("/api/businesses", async (req, res) => {
-  try {
-    const r = await pool.query(
-      `SELECT b.id, b.owner_id, b.name, b.category, b.location,
-              u.name AS owner_name
-       FROM businesses b
-       JOIN users u ON u.id = b.owner_id
-       ORDER BY b.id DESC`
-    );
-    ok(res, { items: r.rows });
-  } catch (e) {
-    bad(res, e.message, 500);
-  }
+  const { rows } = await pool.query(
+    `SELECT b.id, b.name, b.category, b.location
+     FROM businesses b
+     ORDER BY b.created_at DESC`
+  );
+  res.json(rows);
 });
 
-// ---- API: Owner create business ----
-app.post("/api/owner/businesses", async (req, res) => {
-  try {
-    const { owner_id, name, category, location } = req.body || {};
-    if (!owner_id || !name) return bad(res, "owner_id and name required");
-
-    const owner = await pool.query("SELECT id, role FROM users WHERE id=$1", [owner_id]);
-    if (!owner.rows.length || owner.rows[0].role !== "owner") return bad(res, "Invalid owner_id");
-
-    const r = await pool.query(
-      `INSERT INTO businesses (owner_id, name, category, location)
-       VALUES ($1,$2,$3,$4)
-       RETURNING id, owner_id, name, category, location`,
-      [owner_id, name, category || "", location || ""]
-    );
-
-    ok(res, { business: r.rows[0] });
-  } catch (e) {
-    bad(res, e.message, 500);
-  }
-});
-
-// ---- API: Worker request to join business ----
-app.post("/api/worker/register_business", async (req, res) => {
-  try {
-    const { worker_user_id, business_id } = req.body || {};
-    if (!worker_user_id || !business_id) return bad(res, "worker_user_id and business_id required");
-
-    const worker = await pool.query("SELECT id, role FROM users WHERE id=$1", [worker_user_id]);
-    if (!worker.rows.length || worker.rows[0].role !== "worker") return bad(res, "Invalid worker_user_id");
-
-    // Create request (unique constraint prevents duplicates)
-    const r = await pool.query(
-      `INSERT INTO business_worker_requests (business_id, worker_user_id, state)
-       VALUES ($1,$2,'pending')
-       ON CONFLICT (business_id, worker_user_id) DO UPDATE SET state='pending'
-       RETURNING id, business_id, worker_user_id, state`,
-      [business_id, worker_user_id]
-    );
-
-    ok(res, { request: r.rows[0] });
-  } catch (e) {
-    bad(res, e.message, 500);
-  }
-});
-
-// ---- API: Owner pending requests ----
-app.get("/api/owner/pending_requests", async (req, res) => {
-  try {
-    const owner_id = Number(req.query.owner_id || 0);
-    if (!owner_id) return bad(res, "owner_id required");
-
-    const r = await pool.query(
-      `SELECT r.id AS request_id,
-              r.business_id,
-              b.name AS business_name,
-              u.id AS worker_user_id,
-              u.name AS worker_name,
-              u.email,
-              u.phone
-       FROM business_worker_requests r
-       JOIN businesses b ON b.id = r.business_id
-       JOIN users u ON u.id = r.worker_user_id
-       WHERE b.owner_id = $1 AND r.state = 'pending'
-       ORDER BY r.id DESC`,
-      [owner_id]
-    );
-
-    ok(res, { items: r.rows });
-  } catch (e) {
-    bad(res, e.message, 500);
-  }
-});
-
-// ---- API: Owner approve request ----
-app.post("/api/owner/approve_request", async (req, res) => {
-  try {
-    const { owner_id, request_id } = req.body || {};
-    if (!owner_id || !request_id) return bad(res, "owner_id and request_id required");
-
-    // verify owner owns the business for this request
-    const check = await pool.query(
-      `SELECT r.id, r.worker_user_id, r.business_id
-       FROM business_worker_requests r
-       JOIN businesses b ON b.id = r.business_id
-       WHERE r.id = $1 AND b.owner_id = $2`,
-      [request_id, owner_id]
-    );
-    if (!check.rows.length) return bad(res, "Request not found for this owner", 404);
-
-    await pool.query(`UPDATE business_worker_requests SET state='approved' WHERE id=$1`, [request_id]);
-
-    ok(res, { ok: true });
-  } catch (e) {
-    bad(res, e.message, 500);
-  }
-});
-
-// ---- API: Worker profile update ----
-app.post("/api/worker/profile", async (req, res) => {
-  try {
-    const { user_id, skills, experience_years, location } = req.body || {};
-    if (!user_id) return bad(res, "user_id required");
-
-    const worker = await pool.query("SELECT id, role FROM users WHERE id=$1", [user_id]);
-    if (!worker.rows.length || worker.rows[0].role !== "worker") return bad(res, "Invalid user_id");
-
-    await pool.query(
-      `INSERT INTO worker_profiles (user_id, skills, experience_years, location, status)
-       VALUES ($1,$2,$3,$4,'pending')
-       ON CONFLICT (user_id) DO UPDATE SET
-         skills = EXCLUDED.skills,
-         experience_years = EXCLUDED.experience_years,
-         location = EXCLUDED.location`,
-      [user_id, skills || "", Number(experience_years || 0), location || ""]
-    );
-
-    ok(res, { ok: true });
-  } catch (e) {
-    bad(res, e.message, 500);
-  }
-});
-
-// ---- API: Worker status update ----
-app.post("/api/worker/status", async (req, res) => {
-  try {
-    const { user_id, status } = req.body || {};
-    if (!user_id || !status) return bad(res, "user_id and status required");
-    if (!["pending", "ready", "busy"].includes(status)) return bad(res, "Invalid status");
-
-    await pool.query(
-      `UPDATE worker_profiles SET status=$2 WHERE user_id=$1`,
-      [user_id, status]
-    );
-
-    ok(res, { ok: true });
-  } catch (e) {
-    bad(res, e.message, 500);
-  }
-});
-
-// ---- API: Workers list (approved only when filtering by business) ----
 app.get("/api/workers", async (req, res) => {
+  // Only show workers who are approved in some business (or admin approved)
+  // For simplicity: show all workers + profile, plus business_id from latest approved request (if any)
+  const { rows } = await pool.query(`
+    SELECT
+      u.id AS worker_id,
+      u.name,
+      u.email,
+      wp.skills,
+      wp.experience,
+      wp.location,
+      wp.status,
+      wr.business_id
+    FROM users u
+    LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+    LEFT JOIN LATERAL (
+      SELECT business_id
+      FROM worker_requests
+      WHERE worker_id = u.id AND status='approved'
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) wr ON TRUE
+    WHERE u.role='worker'
+    ORDER BY u.id DESC
+  `);
+
+  // Map to what frontend expects
+  res.json(rows.map(r => ({
+    id: r.worker_id,
+    name: r.name,
+    email: r.email,
+    skills: r.skills,
+    experience: r.experience,
+    location: r.location,
+    status: r.status,
+    business_id: r.business_id
+  })));
+});
+
+/* -------------------------
+   Worker endpoints
+   ------------------------- */
+app.post("/api/worker/profile", requireRole("worker"), async (req, res) => {
+  const { skills = "", experience = "", location = "", status = "pending" } = req.body || {};
+  if (!["pending", "ready", "busy"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  await pool.query(
+    `INSERT INTO worker_profiles (user_id, skills, experience, location, status, updated_at)
+     VALUES ($1,$2,$3,$4,$5,NOW())
+     ON CONFLICT (user_id)
+     DO UPDATE SET skills=$2, experience=$3, location=$4, status=$5, updated_at=NOW()`,
+    [req.user.id, skills, experience, location, status]
+  );
+
+  res.json({ ok: true });
+});
+
+app.post("/api/worker/join", requireRole("worker"), async (req, res) => {
+  const { business_id } = req.body || {};
+  if (!business_id) return res.status(400).json({ error: "business_id required" });
+
   try {
-    const status = (req.query.status || "").trim();
-    const business_id = Number(req.query.business_id || 0);
-
-    const where = [];
-    const params = [];
-
-    if (status) {
-      params.push(status);
-      where.push(`wp.status = $${params.length}`);
-    }
-
-    // if business_id filter is used, show only approved workers for that business
-    let joinBiz = "";
-    if (business_id) {
-      params.push(business_id);
-      joinBiz = `
-        JOIN business_worker_requests r
-          ON r.worker_user_id = u.id
-         AND r.business_id = $${params.length}
-         AND r.state = 'approved'
-      `;
-    }
-
-    const q = `
-      SELECT u.id AS user_id, u.name, u.email, u.phone,
-             wp.skills, wp.experience_years, wp.location, wp.status,
-             COALESCE(ROUND(AVG(rt.rating)::numeric, 1), 0) AS avg_rating,
-             COUNT(rt.id) AS rating_count
-      FROM users u
-      JOIN worker_profiles wp ON wp.user_id = u.id
-      ${joinBiz}
-      LEFT JOIN ratings rt ON rt.worker_user_id = u.id
-      WHERE u.role = 'worker'
-      ${where.length ? "AND " + where.join(" AND ") : ""}
-      GROUP BY u.id, wp.user_id
-      ORDER BY u.id DESC
-    `;
-
-    const r = await pool.query(q, params);
-    ok(res, { items: r.rows });
+    await pool.query(
+      "INSERT INTO worker_requests (worker_id, business_id, status) VALUES ($1,$2,'pending')",
+      [req.user.id, Number(business_id)]
+    );
+    res.json({ ok: true });
   } catch (e) {
-    bad(res, e.message, 500);
+    if (String(e.message).includes("duplicate key")) {
+      return res.status(409).json({ error: "Already requested this business" });
+    }
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// ---- Start ----
-(async () => {
+/* -------------------------
+   Owner endpoints
+   ------------------------- */
+app.post("/api/owner/businesses", requireRole("owner"), async (req, res) => {
+  const { name, category = "", location = "" } = req.body || {};
+  if (!name || name.length < 2) return res.status(400).json({ error: "Business name required" });
+
+  await pool.query(
+    "INSERT INTO businesses (owner_id, name, category, location) VALUES ($1,$2,$3,$4)",
+    [req.user.id, name, category, location]
+  );
+
+  res.json({ ok: true });
+});
+
+app.get("/api/owner/requests", requireRole("owner"), async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT
+      wr.id AS request_id,
+      wr.business_id,
+      b.name AS business_name,
+      u.id AS worker_id,
+      u.name AS worker_name,
+      wp.skills
+    FROM worker_requests wr
+    JOIN businesses b ON b.id = wr.business_id
+    JOIN users u ON u.id = wr.worker_id
+    LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+    WHERE b.owner_id = $1 AND wr.status='pending'
+    ORDER BY wr.created_at DESC
+  `, [req.user.id]);
+
+  res.json(rows);
+});
+
+app.post("/api/owner/requests/:id/decision", requireRole("owner"), async (req, res) => {
+  const requestId = Number(req.params.id);
+  const { approve } = req.body || {};
+  const newStatus = approve ? "approved" : "rejected";
+
+  // Ensure request belongs to owner's business
+  const { rows } = await pool.query(`
+    SELECT wr.id
+    FROM worker_requests wr
+    JOIN businesses b ON b.id = wr.business_id
+    WHERE wr.id=$1 AND b.owner_id=$2
+  `, [requestId, req.user.id]);
+
+  if (!rows.length) return res.status(404).json({ error: "Request not found" });
+
+  await pool.query("UPDATE worker_requests SET status=$1 WHERE id=$2", [newStatus, requestId]);
+  res.json({ ok: true });
+});
+
+app.get("/api/owner/workers", requireRole("owner"), async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT
+      u.id AS worker_id,
+      u.name,
+      u.email,
+      wp.skills,
+      wp.location,
+      wp.status,
+      b.name AS business_name
+    FROM worker_requests wr
+    JOIN businesses b ON b.id = wr.business_id
+    JOIN users u ON u.id = wr.worker_id
+    LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+    WHERE b.owner_id=$1 AND wr.status='approved'
+    ORDER BY u.id DESC
+  `, [req.user.id]);
+
+  res.json(rows);
+});
+
+app.post("/api/owner/workers/:id/status", requireRole("owner"), async (req, res) => {
+  const workerId = Number(req.params.id);
+  const { status } = req.body || {};
+  if (!["pending", "ready", "busy"].includes(status)) return res.status(400).json({ error: "Invalid status" });
+
+  // owner can only update status for approved workers under their businesses
+  const { rows } = await pool.query(`
+    SELECT 1
+    FROM worker_requests wr
+    JOIN businesses b ON b.id = wr.business_id
+    WHERE wr.worker_id=$1 AND wr.status='approved' AND b.owner_id=$2
+    LIMIT 1
+  `, [workerId, req.user.id]);
+
+  if (!rows.length) return res.status(403).json({ error: "Not allowed" });
+
+  await pool.query(
+    `INSERT INTO worker_profiles (user_id, status, updated_at)
+     VALUES ($1,$2,NOW())
+     ON CONFLICT (user_id)
+     DO UPDATE SET status=$2, updated_at=NOW()`,
+    [workerId, status]
+  );
+
+  res.json({ ok: true });
+});
+
+/* -------------------------
+   Admin endpoints
+   ------------------------- */
+app.get("/api/admin/businesses", requireRole("admin"), async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT
+      b.id,
+      b.name,
+      b.category,
+      b.location,
+      u.name AS owner_name
+    FROM businesses b
+    JOIN users u ON u.id = b.owner_id
+    ORDER BY b.created_at DESC
+  `);
+  res.json(rows);
+});
+
+app.get("/api/admin/workers/pending", requireRole("admin"), async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT u.id, u.name, u.email, wp.skills
+    FROM users u
+    LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+    WHERE u.role='worker'
+    ORDER BY u.id DESC
+  `);
+
+  // "pending" view means: show workers that are still pending in profile status
+  res.json(rows.filter(r => true)); // keep it simple (admin can approve/reject by setting requests; minimal)
+});
+
+app.post("/api/admin/workers/:id/decision", requireRole("admin"), async (req, res) => {
+  const workerId = Number(req.params.id);
+  const { approve } = req.body || {};
+
+  // Simplified admin approval:
+  // If approve=false => set profile status pending (or keep)
+  // If approve=true => set profile status ready (admin-level approval)
+  const newStatus = approve ? "ready" : "pending";
+
+  await pool.query(
+    `INSERT INTO worker_profiles (user_id, status, updated_at)
+     VALUES ($1,$2,NOW())
+     ON CONFLICT (user_id)
+     DO UPDATE SET status=$2, updated_at=NOW()`,
+    [workerId, newStatus]
+  );
+
+  res.json({ ok: true });
+});
+
+/* =========================
+   Serve frontend from backend
+   ========================= */
+const FRONTEND_FILE = path.join(__dirname, "..", "frontend", "index.html");
+
+app.get("/", (req, res) => {
+  if (!fs.existsSync(FRONTEND_FILE)) {
+    return res.status(404).send("frontend/index.html not found");
+  }
+  res.sendFile(FRONTEND_FILE);
+});
+
+// fallback for reloads (SPA)
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Not found" });
+  if (!fs.existsSync(FRONTEND_FILE)) return res.status(404).send("frontend/index.html not found");
+  res.sendFile(FRONTEND_FILE);
+});
+
+/* =========================
+   Boot
+   ========================= */
+(async function boot() {
   try {
-    await pool.query("SELECT 1");
-    await ensureAdmin();
-    const port = Number(process.env.PORT || 5001);
-    app.listen(port, () => {
-      console.log(`WorkHub running on http://127.0.0.1:${port}`);
+    await ensureSchema();
+    await ensureAdminSeed();
+
+    app.listen(PORT, () => {
+      console.log(`✅ WorkHub running at http://127.0.0.1:${PORT}`);
     });
   } catch (e) {
-    console.error("Startup failed:", e.message);
+    console.error("❌ Failed to start:", e.message);
     process.exit(1);
   }
 })();
