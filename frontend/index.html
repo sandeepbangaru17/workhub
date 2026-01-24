@@ -47,9 +47,7 @@
       position:sticky; top:12px; backdrop-filter: blur(10px);
       z-index:10;
     }
-    .brand{
-      display:flex; align-items:center; gap:12px;
-    }
+    .brand{ display:flex; align-items:center; gap:12px; }
     .logo{
       width:40px; height:40px; border-radius:14px;
       background:linear-gradient(135deg, rgba(110,231,255,.95), rgba(167,139,250,.90));
@@ -61,10 +59,7 @@
     .brand h1{ margin:0; font-size:16px; letter-spacing:.2px; }
     .brand p{ margin:0; font-size:12px; color:var(--muted); }
 
-    .right{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-      justify-content:flex-end;
-    }
+    .right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
     .pill{
       font-size:12px; color:var(--muted);
       border:1px solid var(--line);
@@ -171,9 +166,7 @@
       background: linear-gradient(135deg, rgba(110,231,255,.16), rgba(167,139,250,.12));
     }
 
-    .list{
-      display:flex; flex-direction:column; gap:10px;
-    }
+    .list{ display:flex; flex-direction:column; gap:10px; }
     .item{
       border:1px solid var(--line);
       background: rgba(255,255,255,.05);
@@ -183,8 +176,8 @@
     }
     .item h3{ margin:0; font-size:13px; }
     .item p{ margin:5px 0 0; font-size:12px; color:var(--muted); line-height:1.35; }
-    .item .meta{ font-size:12px; color:var(--muted); }
     .item .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+
     .badge{
       display:inline-flex; align-items:center; gap:6px;
       font-size:12px;
@@ -202,6 +195,22 @@
 
     .muted{ color:var(--muted); font-size:12px; }
     .hr{ height:1px; background:var(--line); margin:12px 0; }
+
+    .rateRow{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .rateRow select, .rateRow input{
+      padding:8px 10px;
+      border-radius:12px;
+    }
+    .rateRow input{
+      flex:1;
+      min-width:180px;
+    }
   </style>
 </head>
 
@@ -225,7 +234,7 @@
     </div>
 
     <div class="grid">
-      <!-- LEFT: Auth + Profile -->
+      <!-- LEFT -->
       <div class="card">
         <div class="hd">
           <div>
@@ -363,7 +372,7 @@
         </div>
       </div>
 
-      <!-- RIGHT: Browse -->
+      <!-- RIGHT -->
       <div class="card">
         <div class="hd">
           <div>
@@ -381,7 +390,6 @@
 
           <div class="hr"></div>
 
-          <!-- Filters -->
           <div class="row" style="align-items:flex-end;">
             <div class="field" style="margin:0;">
               <label>Business filter (for workers)</label>
@@ -408,7 +416,6 @@
   </div>
 
   <script>
-    // ====== API helper ======
     const api = (path, opts={}) =>
       fetch(path, { headers: { "Content-Type": "application/json" }, ...opts })
         .then(async r => {
@@ -419,12 +426,7 @@
 
     const el = id => document.getElementById(id);
 
-    // ====== State ======
-    const state = {
-      user: null,
-      view: "businesses", // businesses | workers
-      businesses: [],
-    };
+    const state = { user: null, view: "businesses", businesses: [] };
 
     function setMsg(target, text, type="") {
       const box = el(target);
@@ -438,14 +440,12 @@
       box.textContent = "";
       box.className = "msg";
     }
-
     function roleName(role){
       if (role === "admin") return "Admin";
       if (role === "owner") return "Owner";
       if (role === "worker") return "Worker";
       return role;
     }
-
     function updateTop() {
       el("btnLogout").disabled = !state.user;
       el("whoPill").textContent = state.user
@@ -453,7 +453,6 @@
         : "Not logged in";
     }
 
-    // ====== Tabs ======
     function showTab(key){
       document.querySelectorAll(".tab").forEach(t => {
         t.classList.toggle("active", t.dataset.tab === key);
@@ -466,7 +465,6 @@
       t.addEventListener("click", () => showTab(t.dataset.tab));
     });
 
-    // ====== Health ======
     async function checkHealth(){
       try{
         await api("/api/health");
@@ -476,7 +474,7 @@
       }
     }
 
-    // ====== Auth ======
+    // AUTH
     el("btnLogin").addEventListener("click", async () => {
       hideMsg("loginMsg");
       try{
@@ -489,7 +487,6 @@
         state.user = data.user;
         setMsg("loginMsg", "Logged in successfully.", "ok");
         updateTop();
-        // default tab by role
         if (state.user.role === "owner") showTab("owner");
         else if (state.user.role === "worker") showTab("profile");
         else showTab("login");
@@ -526,7 +523,7 @@
       refreshAll();
     });
 
-    // ====== Worker profile ======
+    // WORKER PROFILE
     el("btnSaveProfile").addEventListener("click", async () => {
       hideMsg("wpMsg");
       try{
@@ -563,7 +560,7 @@
       }
     });
 
-    // ====== Owner panel ======
+    // OWNER PANEL
     el("btnCreateBiz").addEventListener("click", async () => {
       hideMsg("ownerMsg");
       try{
@@ -610,10 +607,10 @@
         div.className = "item";
         div.innerHTML = `
           <div>
-            <h3>${it.worker_name} <span class="badge warn">Pending</span></h3>
+            <h3>${escapeHtml(it.worker_name)} <span class="badge warn">Pending</span></h3>
             <p>
-              Business: <b>${it.business_name}</b><br/>
-              Email: ${it.email || "-"} • Phone: ${it.phone || "-"}
+              Business: <b>${escapeHtml(it.business_name)}</b><br/>
+              Email: ${escapeHtml(it.email || "-")} • Phone: ${escapeHtml(it.phone || "-")}
             </p>
           </div>
           <div class="actions">
@@ -633,7 +630,6 @@
               body: JSON.stringify({ owner_id: state.user.id, request_id })
             });
             setMsg("ownerMsg", "Request approved.", "ok");
-            // refresh list
             const data = await api(`/api/owner/pending_requests?owner_id=${state.user.id}`);
             renderRequests(data.items || []);
           }catch(e){
@@ -645,7 +641,7 @@
       });
     }
 
-    // ====== Browse view buttons ======
+    // Browse buttons
     el("btnBusinesses").addEventListener("click", async () => {
       state.view = "businesses";
       await refreshBusinesses();
@@ -658,7 +654,7 @@
 
     el("btnRefresh").addEventListener("click", refreshAll);
 
-    // ====== Filters ======
+    // Filters
     el("filterBusiness").addEventListener("change", () => {
       if (state.view === "workers") refreshWorkers();
     });
@@ -666,11 +662,10 @@
       if (state.view === "workers") refreshWorkers();
     });
 
-    // ====== Render Businesses ======
+    // Businesses
     async function refreshBusinesses(){
       const data = await api("/api/businesses");
       state.businesses = data.items || [];
-      // update business dropdown
       const sel = el("filterBusiness");
       const keep = sel.value;
       sel.innerHTML = `<option value="">All businesses</option>` + state.businesses.map(b =>
@@ -683,7 +678,6 @@
       const box = el("list");
       box.innerHTML = "";
       const items = state.businesses;
-
       el("countBadge").textContent = `${items.length} businesses`;
 
       if (!items.length){
@@ -733,7 +727,7 @@
       });
     }
 
-    // ====== Render Workers ======
+    // Workers
     async function refreshWorkers(){
       const box = el("list");
       box.innerHTML = `<div class="muted">Loading workers…</div>`;
@@ -781,7 +775,27 @@
               Exp: ${escapeHtml(String(w.experience_years ?? 0))} yrs • Location: ${escapeHtml(w.location || "—")}<br/>
               Rating: <b>${escapeHtml(String(w.avg_rating))}</b> (${escapeHtml(String(w.rating_count))})
             </p>
+
+            ${state.user ? `
+              <div class="rateRow">
+                <select data-rate-stars="${w.user_id}">
+                  <option value="5">★★★★★ (5)</option>
+                  <option value="4">★★★★☆ (4)</option>
+                  <option value="3">★★★☆☆ (3)</option>
+                  <option value="2">★★☆☆☆ (2)</option>
+                  <option value="1">★☆☆☆☆ (1)</option>
+                </select>
+                <input data-rate-text="${w.user_id}" placeholder="Quick review (optional)" />
+                <button class="btn" data-rate-btn="${w.user_id}">Submit</button>
+              </div>
+              <div class="muted" style="margin-top:6px;">
+                Tip: Login user id is used as rater.
+              </div>
+            ` : `
+              <div class="muted" style="margin-top:8px;">Login to rate workers.</div>
+            `}
           </div>
+
           <div class="actions">
             <span class="badge">📞 ${escapeHtml(w.phone || "—")}</span>
             <span class="badge">✉️ ${escapeHtml(w.email || "—")}</span>
@@ -789,9 +803,41 @@
         `;
         box.appendChild(div);
       });
+
+      // rating button handlers
+      box.querySelectorAll("[data-rate-btn]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          try{
+            if (!state.user) throw new Error("Login required to rate.");
+
+            const workerId = Number(btn.dataset.rateBtn);
+            const starsEl = box.querySelector(`[data-rate-stars="${workerId}"]`);
+            const textEl = box.querySelector(`[data-rate-text="${workerId}"]`);
+            const stars = Number(starsEl.value);
+            const review = (textEl.value || "").trim();
+
+            btn.disabled = true;
+            await api("/api/ratings", {
+              method: "POST",
+              body: JSON.stringify({
+                worker_user_id: workerId,
+                rater_user_id: state.user.id,
+                rating: stars,
+                review
+              })
+            });
+
+            alert("Thanks! Rating submitted.");
+            await refreshWorkers();
+          }catch(e){
+            alert(e.message);
+          }finally{
+            btn.disabled = false;
+          }
+        });
+      });
     }
 
-    // ====== Utils ======
     function escapeHtml(str){
       return String(str)
         .replaceAll("&", "&amp;")
@@ -809,7 +855,6 @@
       updateTop();
     }
 
-    // ====== Boot ======
     (async function init(){
       await refreshAll();
       state.view = "businesses";
