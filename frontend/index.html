@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>WorkHub • Premium Dashboard</title>
+  <title>WorkHub • Premium</title>
 
-  <!-- Premium font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -14,21 +13,25 @@
     :root{
       --bg0:#050815;
       --bg1:#070b1c;
+
       --glass: rgba(255,255,255,.06);
       --glass2: rgba(255,255,255,.085);
       --stroke: rgba(255,255,255,.10);
-      --stroke2: rgba(255,255,255,.14);
+      --stroke2: rgba(255,255,255,.16);
+
       --text:#eef2ff;
       --muted: rgba(238,242,255,.72);
-      --muted2: rgba(238,242,255,.52);
+      --muted2: rgba(238,242,255,.50);
+
       --brand:#38bdf8;
       --brand2:#a78bfa;
       --ok:#34d399;
       --bad:#fb7185;
       --warn:#fbbf24;
 
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --shadow: 0 22px 70px rgba(0,0,0,.45);
       --shadow2: 0 14px 30px rgba(0,0,0,.30);
+
       --r1: 22px;
       --r2: 16px;
       --r3: 14px;
@@ -47,8 +50,6 @@
         linear-gradient(180deg, var(--bg0), var(--bg1));
       overflow-x:hidden;
     }
-
-    /* subtle noise */
     body:before{
       content:"";
       position:fixed; inset:0;
@@ -58,83 +59,169 @@
       opacity:.26;
     }
 
-    a{ color:inherit; text-decoration:none; }
-
-    .wrap{
-      max-width: 1240px;
+    /* ===== App Layout ===== */
+    .app{
+      max-width: 1280px;
       margin: 0 auto;
-      padding: 26px 18px 70px;
+      padding: 18px 16px 70px;
+      display:grid;
+      grid-template-columns: 270px 1fr;
+      gap: 16px;
       position:relative;
     }
-
-    /* Topbar */
-    .topbar{
-      position:sticky;
-      top:14px;
-      z-index:20;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      padding: 14px 14px;
-      border-radius: var(--r1);
-      border: 1px solid var(--stroke);
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-      backdrop-filter: blur(14px);
-      box-shadow: var(--shadow2);
+    @media (max-width: 980px){
+      .app{
+        grid-template-columns: 1fr;
+      }
     }
 
-    .brand{
-      display:flex; align-items:center; gap:12px;
-      min-width: 280px;
+    /* ===== Sidebar ===== */
+    .sidebar{
+      position:sticky;
+      top:16px;
+      height: calc(100vh - 32px);
+      border-radius: var(--r1);
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    @media (max-width: 980px){
+      .sidebar{ position:relative; height:auto; }
+    }
+    .sb-top{
+      padding: 16px;
+      border-bottom: 1px solid var(--stroke);
+      display:flex;
+      gap:12px;
+      align-items:center;
+      background: rgba(255,255,255,.03);
     }
     .logo{
       width:44px; height:44px;
       border-radius: 16px;
       background: linear-gradient(135deg, rgba(56,189,248,.95), rgba(167,139,250,.92));
-      box-shadow: 0 14px 34px rgba(56,189,248,.18);
       display:grid; place-items:center;
       font-weight: 900;
-      letter-spacing: .5px;
       color:#041022;
+      box-shadow: 0 14px 34px rgba(56,189,248,.18);
       user-select:none;
     }
-    .brandTitle{
-      display:flex; flex-direction:column; gap:2px;
-    }
-    .brandTitle .t{
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: .2px;
-      margin:0;
-    }
-    .brandTitle .s{
-      margin:0;
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .sb-title .t{ margin:0; font-weight:900; font-size:14px; }
+    .sb-title .s{ margin:4px 0 0; font-size:12px; color:var(--muted); line-height:1.3; }
 
-    .right{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-      justify-content:flex-end;
+    .sb-nav{
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
     }
-    .chip{
+    .navbtn{
+      border:1px solid transparent;
+      background: rgba(0,0,0,.16);
+      border-radius: 14px;
+      padding: 11px 12px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      transition: .14s ease;
+    }
+    .navbtn:hover{ border-color: var(--stroke2); background: rgba(255,255,255,.06); transform: translateY(-1px); }
+    .navbtn.active{
+      border-color: rgba(56,189,248,.40);
+      background: linear-gradient(135deg, rgba(56,189,248,.16), rgba(167,139,250,.12));
+    }
+    .navleft{
+      display:flex; align-items:center; gap:10px;
+      font-weight: 900; font-size: 13px;
+    }
+    .navicon{
+      width:30px; height:30px;
+      border-radius: 12px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      display:grid; place-items:center;
+      font-size: 14px;
+    }
+    .navmeta{
+      font-size: 11px;
+      color: var(--muted2);
+      font-weight: 800;
+      padding: 6px 8px;
       border: 1px solid var(--stroke);
       background: rgba(0,0,0,.14);
-      padding: 9px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .sb-bottom{
+      margin-top:auto;
+      padding: 14px 14px 16px;
+      border-top: 1px solid var(--stroke);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      background: rgba(0,0,0,.10);
+    }
+    .pill{
+      display:flex; align-items:center; gap:8px;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,.14);
+      padding: 10px 10px;
       border-radius: 999px;
       font-size: 12px;
       color: var(--muted);
-      display:inline-flex; align-items:center; gap:8px;
+      font-weight: 800;
       white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
     }
     .dot{
       width:8px; height:8px; border-radius:99px; display:inline-block;
       background: rgba(255,255,255,.25);
       box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+      flex: 0 0 auto;
     }
     .dot.ok{ background: rgba(52,211,153,.92); box-shadow: 0 0 0 3px rgba(52,211,153,.14); }
     .dot.bad{ background: rgba(251,113,133,.92); box-shadow: 0 0 0 3px rgba(251,113,133,.14); }
+
+    /* ===== Main ===== */
+    .main{
+      border-radius: var(--r1);
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .topbar{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--stroke);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(255,255,255,.03);
+    }
+    .topbar h1{
+      margin:0;
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .topbar p{
+      margin:5px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .topActions{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      justify-content:flex-end;
+    }
 
     .btn{
       border: 1px solid var(--stroke);
@@ -144,8 +231,9 @@
       border-radius: 14px;
       cursor:pointer;
       transition: transform .14s ease, background .14s ease, border-color .14s ease;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: .1px;
+      font-size: 12px;
     }
     .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.09); border-color: var(--stroke2); }
     .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
@@ -154,87 +242,36 @@
       border-color: rgba(56,189,248,.35);
       background: linear-gradient(135deg, rgba(56,189,248,.18), rgba(167,139,250,.14));
     }
-    .btn.ghost{
-      background: rgba(0,0,0,.18);
-    }
+    .btn.ghost{ background: rgba(0,0,0,.18); }
     .btn.danger{
       border-color: rgba(251,113,133,.38);
       background: rgba(251,113,133,.12);
     }
 
-    /* Layout */
-    .grid{
-      margin-top: 18px;
-      display:grid;
-      grid-template-columns: 400px 1fr;
-      gap: 16px;
-      align-items: start;
-    }
-    @media (max-width: 1040px){
-      .grid{ grid-template-columns: 1fr; }
-      .topbar{ position:relative; top:0; }
-      .brand{ min-width: unset; }
-    }
+    .content{ padding: 16px; }
 
-    .card{
-      border-radius: var(--r1);
-      border: 1px solid var(--stroke);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      backdrop-filter: blur(12px);
+    /* ===== Controls ===== */
+    .controls{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+      justify-content:space-between;
+      margin-bottom: 12px;
     }
-    .hd{
-      padding: 16px 16px 12px;
-      border-bottom: 1px solid var(--stroke);
-      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
-      background: rgba(255,255,255,.03);
-    }
-    .hd h2{
-      margin:0;
-      font-size: 14px;
-      letter-spacing: .1px;
-      font-weight: 900;
-    }
-    .hd p{
-      margin: 6px 0 0;
-      font-size: 12px;
-      line-height: 1.45;
-      color: var(--muted);
-    }
-    .bd{ padding: 16px; }
+    .leftControls{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .rightControls{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; justify-content:flex-end; }
 
-    .tabs{
-      display:flex; gap:8px; flex-wrap:wrap;
-      padding: 12px 16px 0;
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      min-width: 190px;
     }
-    .tab{
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px solid var(--stroke);
-      background: rgba(0,0,0,.16);
-      padding: 9px 10px;
-      border-radius: 999px;
-      cursor:pointer;
-      transition: .14s ease;
-      user-select:none;
-      font-weight: 800;
-    }
-    .tab:hover{ border-color: var(--stroke2); }
-    .tab.active{
-      color: var(--text);
-      border-color: rgba(56,189,248,.40);
-      background: linear-gradient(135deg, rgba(56,189,248,.16), rgba(167,139,250,.12));
-    }
-
-    .row{ display:flex; gap:10px; }
-    .row > *{ flex:1; }
-    .field{ display:flex; flex-direction:column; gap:7px; margin-bottom:12px; }
     .field label{
       font-size: 12px;
       color: var(--muted);
-      font-weight: 700;
-      letter-spacing: .1px;
+      font-weight: 800;
     }
     input, select, textarea{
       width:100%;
@@ -251,28 +288,22 @@
       border-color: rgba(56,189,248,.40);
       background: rgba(0,0,0,.26);
     }
-    textarea{ min-height: 90px; resize: vertical; }
     ::placeholder{ color: rgba(238,242,255,.35); }
+    textarea{ min-height: 90px; resize: vertical; }
 
-    .hr{ height:1px; background: var(--stroke); margin: 14px 0; }
-
-    .msg{
-      margin-top: 10px;
-      border-radius: 16px;
-      padding: 11px 12px;
-      border: 1px solid var(--stroke);
-      background: rgba(0,0,0,.18);
-      font-size: 13px;
+    .kpi{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.14);
+      border-radius: 999px;
+      padding: 9px 10px;
+      font-size: 12px;
       color: var(--muted);
-      line-height:1.45;
+      font-weight: 900;
     }
-    .msg.ok{ border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.10); color: rgba(214,255,236,.92); }
-    .msg.bad{ border-color: rgba(251,113,133,.40); background: rgba(251,113,133,.10); color: rgba(255,218,225,.92); }
 
-    /* List */
-    .list{
-      display:flex; flex-direction:column; gap:12px;
-    }
+    /* ===== List ===== */
+    .list{ display:flex; flex-direction:column; gap:12px; }
     .item{
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,.05);
@@ -299,7 +330,6 @@
       margin:0;
       font-size: 13px;
       font-weight: 900;
-      letter-spacing:.1px;
     }
     .item p{
       margin: 6px 0 0;
@@ -307,11 +337,13 @@
       color: var(--muted);
       line-height:1.45;
     }
-
     .actions{
-      display:flex; align-items:center; justify-content:flex-end;
-      gap: 8px; flex-wrap:wrap;
-      min-width: 190px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap: 8px;
+      flex-wrap:wrap;
+      min-width: 210px;
     }
 
     .badge{
@@ -322,7 +354,7 @@
       padding: 7px 10px;
       font-size: 12px;
       color: var(--muted);
-      font-weight: 800;
+      font-weight: 900;
       white-space: nowrap;
     }
     .badge.ok{ border-color: rgba(52,211,153,.34); color: rgba(214,255,236,.92); background: rgba(52,211,153,.10); }
@@ -330,168 +362,395 @@
     .badge.warn{ border-color: rgba(251,191,36,.38); color: rgba(255,245,210,.92); background: rgba(251,191,36,.10); }
     .badge.brand{ border-color: rgba(56,189,248,.35); color: rgba(220,251,255,.95); background: rgba(56,189,248,.10); }
 
-    .muted{ color: var(--muted); font-size: 12px; }
     .hint{ color: var(--muted2); font-size: 12px; }
 
-    /* Rating row */
-    .rateRow{
-      margin-top: 10px;
+    /* ===== Skeleton ===== */
+    .skeleton{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      border-radius: var(--r2);
+      padding: 14px;
+      position:relative;
+      overflow:hidden;
+    }
+    .sk-line{ height: 10px; border-radius: 999px; background: rgba(255,255,255,.09); margin: 10px 0; }
+    .sk-line.w1{ width: 55%; }
+    .sk-line.w2{ width: 78%; }
+    .sk-line.w3{ width: 45%; }
+    .skeleton:before{
+      content:"";
+      position:absolute; inset:-20px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.10), transparent);
+      transform: translateX(-60%);
+      animation: shimmer 1.1s infinite;
+    }
+    @keyframes shimmer{
+      0%{ transform: translateX(-70%); }
+      100%{ transform: translateX(70%); }
+    }
+
+    /* ===== Toasts ===== */
+    .toasts{
+      position: fixed;
+      right: 18px;
+      top: 18px;
+      z-index: 60;
       display:flex;
-      gap: 8px;
-      flex-wrap:wrap;
+      flex-direction:column;
+      gap:10px;
+      width: min(380px, calc(100vw - 36px));
+    }
+    .toast{
+      border:1px solid var(--stroke);
+      background: rgba(10,14,34,.75);
+      backdrop-filter: blur(14px);
+      border-radius: 18px;
+      padding: 12px 12px;
+      box-shadow: var(--shadow2);
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      animation: pop .18s ease;
+    }
+    @keyframes pop{
+      from{ transform: translateY(-6px); opacity: 0; }
+      to{ transform: translateY(0); opacity: 1; }
+    }
+    .ticon{
+      width:34px; height:34px;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      display:grid; place-items:center;
+      font-weight: 900;
+      flex:0 0 auto;
+    }
+    .toast.ok{ border-color: rgba(52,211,153,.35); }
+    .toast.bad{ border-color: rgba(251,113,133,.40); }
+    .toast.warn{ border-color: rgba(251,191,36,.38); }
+
+    .toast h4{ margin:0; font-size: 13px; font-weight: 900; }
+    .toast p{ margin:4px 0 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .toast .x{
+      margin-left:auto;
+      border:none;
+      background: transparent;
+      color: var(--muted);
+      cursor:pointer;
+      font-size: 14px;
+      padding: 4px 8px;
+      border-radius: 10px;
+    }
+    .toast .x:hover{ background: rgba(255,255,255,.08); color: var(--text); }
+
+    /* ===== Modal ===== */
+    .modalWrap{
+      position:fixed; inset:0;
+      z-index: 70;
+      display:none;
       align-items:center;
-      padding: 10px;
-      border: 1px dashed rgba(255,255,255,.14);
-      border-radius: 16px;
+      justify-content:center;
+      padding: 18px;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+    }
+    .modal{
+      width: min(740px, 100%);
+      border-radius: 22px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalHd{
+      padding: 14px 16px;
+      border-bottom:1px solid var(--stroke);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(255,255,255,.03);
+    }
+    .modalHd h3{ margin:0; font-size: 14px; font-weight: 900; }
+    .modalBd{ padding: 16px; }
+    .modalFt{
+      padding: 14px 16px;
+      border-top:1px solid var(--stroke);
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
       background: rgba(0,0,0,.12);
     }
-    .rateRow select, .rateRow input{
-      padding: 10px 11px;
-      border-radius: 14px;
-      border-color: rgba(255,255,255,.12);
+    .closeBtn{
+      border:none;
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      cursor:pointer;
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-weight: 900;
     }
-    .rateRow input{
-      flex: 1;
-      min-width: 180px;
-    }
+    .closeBtn:hover{ background: rgba(255,255,255,.12); }
 
-    /* Header actions in browse */
-    .browseControls{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-    }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .row > *{ flex: 1; min-width: 210px; }
 
-    /* small */
-    .kpi{
-      display:inline-flex; align-items:center; gap:8px;
-      border:1px solid var(--stroke);
-      background: rgba(0,0,0,.14);
-      border-radius: 999px;
-      padding: 9px 10px;
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 800;
-    }
+    /* Small */
+    .hide{ display:none !important; }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo">WH</div>
-        <div class="brandTitle">
-          <p class="t">WorkHub</p>
-          <p class="s">Premium dashboard • Businesses ⇄ Workers • Vizag-first</p>
-        </div>
-      </div>
+  <div class="toasts" id="toasts"></div>
 
-      <div class="right">
-        <div class="chip" id="healthPill"><span class="dot"></span> API: checking…</div>
-        <div class="chip" id="whoPill">Not logged in</div>
-        <button class="btn ghost" id="btnRefresh">Refresh</button>
-        <button class="btn danger" id="btnLogout" disabled>Logout</button>
+  <div class="modalWrap" id="modalWrap" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modalHd">
+        <h3 id="modalTitle">Modal</h3>
+        <button class="closeBtn" id="modalClose">✕</button>
       </div>
+      <div class="modalBd" id="modalBody"></div>
+      <div class="modalFt" id="modalFoot"></div>
     </div>
+  </div>
 
-    <div class="grid">
-      <!-- LEFT -->
-      <div class="card">
-        <div class="hd">
-          <div>
-            <h2>Account & Tools</h2>
-            <p>Login/register, worker profile controls, owner business panel.</p>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sb-top">
+        <div class="logo">WH</div>
+        <div class="sb-title">
+          <p class="t">WorkHub</p>
+          <p class="s">Premium UI • Single-page • One-command run</p>
+        </div>
+      </div>
+
+      <nav class="sb-nav">
+        <button class="navbtn active" data-page="browseBusinesses">
+          <div class="navleft"><span class="navicon">🏢</span> Businesses</div>
+          <span class="navmeta" id="metaBusinesses">0</span>
+        </button>
+        <button class="navbtn" data-page="browseWorkers">
+          <div class="navleft"><span class="navicon">🧑‍🔧</span> Workers</div>
+          <span class="navmeta" id="metaWorkers">0</span>
+        </button>
+        <button class="navbtn" data-page="auth">
+          <div class="navleft"><span class="navicon">🔐</span> Login / Register</div>
+          <span class="navmeta">Account</span>
+        </button>
+        <button class="navbtn" data-page="owner">
+          <div class="navleft"><span class="navicon">🧾</span> Owner Panel</div>
+          <span class="navmeta">Manage</span>
+        </button>
+        <button class="navbtn" data-page="worker">
+          <div class="navleft"><span class="navicon">⚡</span> Worker Panel</div>
+          <span class="navmeta">Profile</span>
+        </button>
+      </nav>
+
+      <div class="sb-bottom">
+        <div class="pill" id="healthPill"><span class="dot"></span> API: checking…</div>
+        <div class="pill" id="whoPill">Not logged in</div>
+        <div class="row" style="gap:8px;">
+          <button class="btn ghost" id="btnRefresh">Refresh</button>
+          <button class="btn danger" id="btnLogout" disabled>Logout</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 id="pageTitle">Businesses</h1>
+          <p id="pageSub">Browse and manage businesses in a clean premium dashboard.</p>
+        </div>
+        <div class="topActions">
+          <span class="kpi" id="countBadge">0 items</span>
+          <button class="btn primary" id="btnPrimaryAction">New</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- Page: Businesses -->
+        <section id="page-browseBusinesses">
+          <div class="controls">
+            <div class="leftControls">
+              <div class="field">
+                <label>Search</label>
+                <input id="bizSearch" placeholder="Search business name, category, location…">
+              </div>
+              <div class="field">
+                <label>Sort</label>
+                <select id="bizSort">
+                  <option value="name_asc">Name (A→Z)</option>
+                  <option value="name_desc">Name (Z→A)</option>
+                  <option value="location_asc">Location (A→Z)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="rightControls">
+              <div class="hint">Tip: Login as Worker to “Request to Join”.</div>
+            </div>
           </div>
-        </div>
+          <div class="list" id="bizList"></div>
+        </section>
 
-        <div class="tabs">
-          <div class="tab active" data-tab="login">Login</div>
-          <div class="tab" data-tab="register">Register</div>
-          <div class="tab" data-tab="profile">Worker</div>
-          <div class="tab" data-tab="owner">Owner</div>
-        </div>
+        <!-- Page: Workers -->
+        <section id="page-browseWorkers" class="hide">
+          <div class="controls">
+            <div class="leftControls">
+              <div class="field">
+                <label>Search</label>
+                <input id="workerSearch" placeholder="Search name, skills, location…">
+              </div>
 
-        <div class="bd">
-          <!-- LOGIN -->
-          <div class="panel" id="panel-login">
+              <div class="field">
+                <label>Business filter</label>
+                <select id="filterBusiness">
+                  <option value="">All businesses</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Status filter</label>
+                <select id="filterStatus">
+                  <option value="">All</option>
+                  <option value="ready">Ready</option>
+                  <option value="busy">Busy</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Sort</label>
+                <select id="workerSort">
+                  <option value="rating_desc">Rating (High→Low)</option>
+                  <option value="rating_asc">Rating (Low→High)</option>
+                  <option value="name_asc">Name (A→Z)</option>
+                  <option value="name_desc">Name (Z→A)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="rightControls">
+              <div class="hint">Tip: Login to rate workers with reviews.</div>
+            </div>
+          </div>
+          <div class="list" id="workerList"></div>
+        </section>
+
+        <!-- Page: Auth -->
+        <section id="page-auth" class="hide">
+          <div class="row">
             <div class="field">
               <label>Email</label>
-              <input id="loginEmail" placeholder="name@example.com"/>
+              <input id="loginEmail" placeholder="admin@workhub.local"/>
             </div>
             <div class="field">
               <label>Password</label>
-              <input id="loginPass" type="password" placeholder="••••••••"/>
+              <input id="loginPass" type="password" placeholder="admin123"/>
             </div>
-            <div class="row">
-              <button class="btn primary" id="btnLogin">Login</button>
-              <button class="btn" id="btnQuickAdmin">Use Admin Demo</button>
-            </div>
-            <div class="msg" id="loginMsg" style="display:none;"></div>
-
-            <div class="hr"></div>
-            <div class="hint">Admin demo: <b>admin@workhub.local</b> / <b>admin123</b></div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn primary" id="btnLogin">Login</button>
+            <button class="btn" id="btnQuickAdmin">Use Admin Demo</button>
           </div>
 
-          <!-- REGISTER -->
-          <div class="panel" id="panel-register" style="display:none;">
+          <div style="height:14px;"></div>
+
+          <div class="row">
             <div class="field">
-              <label>Role</label>
+              <label>Register as</label>
               <select id="regRole">
                 <option value="owner">Business Owner</option>
                 <option value="worker">Worker</option>
               </select>
             </div>
-
             <div class="field">
               <label>Name</label>
               <input id="regName" placeholder="Full name"/>
             </div>
+          </div>
 
-            <div class="row">
-              <div class="field">
-                <label>Email</label>
-                <input id="regEmail" placeholder="name@example.com"/>
-              </div>
-              <div class="field">
-                <label>Phone (optional)</label>
-                <input id="regPhone" placeholder="98765…"/>
-              </div>
+          <div class="row">
+            <div class="field">
+              <label>Email</label>
+              <input id="regEmail" placeholder="name@example.com"/>
             </div>
+            <div class="field">
+              <label>Phone (optional)</label>
+              <input id="regPhone" placeholder="98765…"/>
+            </div>
+          </div>
 
+          <div class="row">
             <div class="field">
               <label>Password</label>
               <input id="regPass" type="password" placeholder="Minimum 4 characters"/>
             </div>
-
-            <button class="btn primary" id="btnRegister">Create account</button>
-            <div class="msg" id="regMsg" style="display:none;"></div>
           </div>
 
-          <!-- WORKER -->
-          <div class="panel" id="panel-profile" style="display:none;">
-            <div class="muted" style="margin-bottom:10px;">
-              Worker profile: keep it clean and searchable.
-            </div>
+          <button class="btn primary" id="btnRegister">Create account</button>
 
+          <div style="height:12px;"></div>
+          <div class="hint">Admin demo: <b>admin@workhub.local</b> / <b>admin123</b></div>
+        </section>
+
+        <!-- Page: Owner -->
+        <section id="page-owner" class="hide">
+          <div class="hint" style="margin-bottom:10px;">Owner tools: create businesses and approve worker requests.</div>
+          <div class="row">
+            <div class="field">
+              <label>Business name</label>
+              <input id="bizName" placeholder="e.g., Sri Lakshmi Constructions"/>
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <input id="bizCat" placeholder="Construction / Hotel / Retail…"/>
+            </div>
+            <div class="field">
+              <label>Location</label>
+              <input id="bizLoc" placeholder="Vizag"/>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <button class="btn primary" id="btnCreateBiz">Create business</button>
+            <button class="btn" id="btnLoadRequests">Load pending requests</button>
+          </div>
+
+          <div style="height:14px;"></div>
+          <div class="list" id="requestList"></div>
+        </section>
+
+        <!-- Page: Worker -->
+        <section id="page-worker" class="hide">
+          <div class="hint" style="margin-bottom:10px;">Worker tools: update profile and availability status.</div>
+
+          <div class="row">
             <div class="field">
               <label>Skills (comma separated)</label>
               <input id="wpSkills" placeholder="Plumber, Electrician, Painter…"/>
             </div>
-
-            <div class="row">
-              <div class="field">
-                <label>Experience (years)</label>
-                <input id="wpExp" type="number" min="0" value="0"/>
-              </div>
-              <div class="field">
-                <label>Location</label>
-                <input id="wpLoc" placeholder="Vizag / Gajuwaka / MVP…"/>
-              </div>
+            <div class="field">
+              <label>Experience (years)</label>
+              <input id="wpExp" type="number" min="0" value="0"/>
             </div>
+            <div class="field">
+              <label>Location</label>
+              <input id="wpLoc" placeholder="Vizag / Gajuwaka / MVP…"/>
+            </div>
+          </div>
 
+          <div class="row" style="margin-top:10px;">
             <button class="btn primary" id="btnSaveProfile">Save profile</button>
+          </div>
 
-            <div class="hr"></div>
+          <div style="height:14px;"></div>
 
+          <div class="row">
             <div class="field">
               <label>Availability status</label>
               <select id="wpStatus">
@@ -500,123 +759,186 @@
                 <option value="busy">Busy</option>
               </select>
             </div>
-
-            <button class="btn" id="btnSetStatus">Update status</button>
-
-            <div class="msg" id="wpMsg" style="display:none;"></div>
-          </div>
-
-          <!-- OWNER -->
-          <div class="panel" id="panel-owner" style="display:none;">
-            <div class="muted" style="margin-bottom:10px;">
-              Owner: create businesses and approve worker join requests.
-            </div>
-
             <div class="field">
-              <label>Business name</label>
-              <input id="bizName" placeholder="e.g., Sri Lakshmi Constructions"/>
+              <label>&nbsp;</label>
+              <button class="btn" id="btnSetStatus">Update status</button>
             </div>
-
-            <div class="row">
-              <div class="field">
-                <label>Category</label>
-                <input id="bizCat" placeholder="Construction / Hotel / Retail…"/>
-              </div>
-              <div class="field">
-                <label>Location</label>
-                <input id="bizLoc" placeholder="Vizag"/>
-              </div>
-            </div>
-
-            <button class="btn primary" id="btnCreateBiz">Create business</button>
-
-            <div class="hr"></div>
-
-            <div class="row">
-              <button class="btn" id="btnLoadRequests">Load pending requests</button>
-              <button class="btn ghost" id="btnGoBusinesses">Open Businesses</button>
-            </div>
-
-            <div class="msg" id="ownerMsg" style="display:none;"></div>
-
-            <div class="hr"></div>
-            <div class="list" id="requestList"></div>
           </div>
-        </div>
+        </section>
+
       </div>
-
-      <!-- RIGHT -->
-      <div class="card">
-        <div class="hd">
-          <div>
-            <h2>Browse</h2>
-            <p>Businesses and workers with filters + ratings. One clean view.</p>
-          </div>
-          <div class="browseControls">
-            <div class="kpi" id="countBadge">0 items</div>
-            <button class="btn primary" id="btnBusinesses">Businesses</button>
-            <button class="btn" id="btnWorkers">Workers</button>
-          </div>
-        </div>
-
-        <div class="bd">
-          <div class="row" style="align-items:flex-end;">
-            <div class="field" style="margin:0;">
-              <label>Business filter (for workers)</label>
-              <select id="filterBusiness">
-                <option value="">All businesses</option>
-              </select>
-            </div>
-            <div class="field" style="margin:0;">
-              <label>Status filter</label>
-              <select id="filterStatus">
-                <option value="">All</option>
-                <option value="ready">Ready</option>
-                <option value="busy">Busy</option>
-                <option value="pending">Pending</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="hr"></div>
-          <div class="list" id="list"></div>
-        </div>
-      </div>
-    </div>
+    </main>
   </div>
 
   <script>
-    const api = (path, opts={}) =>
-      fetch(path, { headers: { "Content-Type": "application/json" }, ...opts })
-        .then(async r => {
-          const data = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(data.error || ("Request failed: " + r.status));
-          return data;
-        });
+    /* =========================
+       Helpers
+    ========================== */
+    const el = (id) => document.getElementById(id);
 
-    const el = id => document.getElementById(id);
-    const state = { user: null, view: "businesses", businesses: [] };
+    const api = async (path, opts={}) => {
+      const r = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...opts
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || ("Request failed: " + r.status));
+      return data;
+    };
+
+    const state = {
+      user: null,
+      businesses: [],
+      workers: [],
+      page: "browseBusinesses"
+    };
 
     function escapeHtml(str){
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
     }
 
-    function setMsg(target, text, type="") {
-      const box = el(target);
-      box.style.display = "block";
-      box.className = "msg " + (type || "");
-      box.textContent = text;
+    /* =========================
+       Toasts
+    ========================== */
+    function toast(type, title, message, ms=3200){
+      const box = el("toasts");
+      const t = document.createElement("div");
+      t.className = "toast " + (type || "");
+      const icon = type === "ok" ? "✓" : type === "bad" ? "!" : "⚠";
+      t.innerHTML = `
+        <div class="ticon">${icon}</div>
+        <div>
+          <h4>${escapeHtml(title)}</h4>
+          <p>${escapeHtml(message)}</p>
+        </div>
+        <button class="x" aria-label="Close">✕</button>
+      `;
+      box.appendChild(t);
+
+      const close = () => { if (t && t.parentNode) t.parentNode.removeChild(t); };
+      t.querySelector(".x").addEventListener("click", close);
+      setTimeout(close, ms);
     }
-    function hideMsg(target){
-      const box = el(target);
-      box.style.display = "none";
-      box.textContent = "";
-      box.className = "msg";
+
+    /* =========================
+       Modal (confirm / form)
+    ========================== */
+    function openModal({ title, bodyHtml, actions=[] }){
+      el("modalTitle").textContent = title || "Modal";
+      el("modalBody").innerHTML = bodyHtml || "";
+      const foot = el("modalFoot");
+      foot.innerHTML = "";
+
+      actions.forEach(a => {
+        const b = document.createElement("button");
+        b.className = "btn " + (a.variant || "");
+        b.textContent = a.label || "OK";
+        b.addEventListener("click", async () => {
+          try{
+            if (a.onClick) await a.onClick();
+          } finally {
+            if (a.closeOnClick !== false) closeModal();
+          }
+        });
+        foot.appendChild(b);
+      });
+
+      el("modalWrap").style.display = "flex";
+      el("modalWrap").setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal(){
+      el("modalWrap").style.display = "none";
+      el("modalWrap").setAttribute("aria-hidden", "true");
+      el("modalBody").innerHTML = "";
+      el("modalFoot").innerHTML = "";
+    }
+
+    el("modalClose").addEventListener("click", closeModal);
+    el("modalWrap").addEventListener("click", (e) => {
+      if (e.target === el("modalWrap")) closeModal();
+    });
+
+    /* =========================
+       Nav + Pages
+    ========================== */
+    function setPage(page){
+      state.page = page;
+
+      document.querySelectorAll(".navbtn").forEach(b => {
+        b.classList.toggle("active", b.dataset.page === page);
+      });
+
+      document.querySelectorAll("[id^='page-']").forEach(s => s.classList.add("hide"));
+      el("page-" + page).classList.remove("hide");
+
+      // top titles + primary action behavior
+      const titleMap = {
+        browseBusinesses: ["Businesses", "Browse and manage businesses in a clean premium dashboard."],
+        browseWorkers: ["Workers", "Find workers by skill/status and rate them with reviews."],
+        auth: ["Login / Register", "Access your role-based account and start using WorkHub."],
+        owner: ["Owner Panel", "Create businesses and approve worker join requests."],
+        worker: ["Worker Panel", "Update your profile, skills, and availability status."]
+      };
+      el("pageTitle").textContent = titleMap[page]?.[0] || "WorkHub";
+      el("pageSub").textContent = titleMap[page]?.[1] || "";
+
+      // primary action button
+      const primary = el("btnPrimaryAction");
+      primary.onclick = null;
+
+      if (page === "browseBusinesses"){
+        primary.textContent = "New Business";
+        primary.onclick = () => openCreateBusinessModal();
+      } else if (page === "browseWorkers"){
+        primary.textContent = "Refresh";
+        primary.onclick = () => refreshWorkers();
+      } else if (page === "auth"){
+        primary.textContent = "Login";
+        primary.onclick = () => el("btnLogin").click();
+      } else if (page === "owner"){
+        primary.textContent = "Create";
+        primary.onclick = () => openCreateBusinessModal();
+      } else if (page === "worker"){
+        primary.textContent = "Save";
+        primary.onclick = () => el("btnSaveProfile").click();
+      } else {
+        primary.textContent = "New";
+      }
+
+      // counts
+      refreshCountBadges();
+    }
+
+    document.querySelectorAll(".navbtn").forEach(b => {
+      b.addEventListener("click", () => setPage(b.dataset.page));
+    });
+
+    function refreshCountBadges(){
+      el("metaBusinesses").textContent = String(state.businesses.length || 0);
+      el("metaWorkers").textContent = String(state.workers.length || 0);
+
+      const count = state.page === "browseWorkers"
+        ? state.workers.length
+        : state.page === "browseBusinesses"
+          ? state.businesses.length
+          : 0;
+
+      el("countBadge").textContent = `${count} items`;
+    }
+
+    /* =========================
+       Health + User
+    ========================== */
+    function setHealth(ok){
+      el("healthPill").innerHTML = ok
+        ? `<span class="dot ok"></span> API: OK`
+        : `<span class="dot bad"></span> API: DOWN`;
     }
 
     function roleName(role){
@@ -626,186 +948,356 @@
       return role;
     }
 
-    function updateTop() {
+    function updateWho(){
       el("btnLogout").disabled = !state.user;
       el("whoPill").textContent = state.user
         ? `${roleName(state.user.role)} • ${state.user.name} (id:${state.user.id})`
         : "Not logged in";
     }
 
-    function setHealth(ok){
-      const pill = el("healthPill");
-      pill.innerHTML = ok
-        ? `<span class="dot ok"></span> API: OK`
-        : `<span class="dot bad"></span> API: DOWN`;
+    /* =========================
+       Skeleton
+    ========================== */
+    function renderSkeleton(targetId, n=4){
+      const box = el(targetId);
+      box.innerHTML = "";
+      for (let i=0;i<n;i++){
+        const s = document.createElement("div");
+        s.className = "skeleton";
+        s.innerHTML = `
+          <div class="sk-line w1"></div>
+          <div class="sk-line w2"></div>
+          <div class="sk-line w3"></div>
+        `;
+        box.appendChild(s);
+      }
     }
 
-    function showTab(key){
-      document.querySelectorAll(".tab").forEach(t => {
-        t.classList.toggle("active", t.dataset.tab === key);
+    /* =========================
+       Businesses
+    ========================== */
+    function openCreateBusinessModal(){
+      if (!state.user || state.user.role !== "owner"){
+        toast("warn", "Owner required", "Login as a Business Owner to create a business.");
+        setPage("auth");
+        return;
+      }
+
+      openModal({
+        title: "Create new business",
+        bodyHtml: `
+          <div class="row">
+            <div class="field">
+              <label>Business name</label>
+              <input id="mBizName" placeholder="e.g., Sri Lakshmi Constructions"/>
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <input id="mBizCat" placeholder="Construction / Hotel / Retail…"/>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Location</label>
+              <input id="mBizLoc" placeholder="Vizag"/>
+            </div>
+          </div>
+          <div class="hint">This will be owned by your current account.</div>
+        `,
+        actions: [
+          { label: "Cancel", variant: "ghost" },
+          {
+            label: "Create",
+            variant: "primary",
+            onClick: async () => {
+              const name = el("mBizName").value.trim();
+              const category = el("mBizCat").value.trim();
+              const location = el("mBizLoc").value.trim();
+
+              await api("/api/owner/businesses", {
+                method:"POST",
+                body: JSON.stringify({ owner_id: state.user.id, name, category, location })
+              });
+
+              toast("ok", "Business created", "Your business is now live.");
+              await refreshBusinesses();
+              if (state.page !== "browseBusinesses") setPage("browseBusinesses");
+            }
+          }
+        ]
       });
-      ["login","register","profile","owner"].forEach(k => {
-        el("panel-"+k).style.display = (k === key) ? "block" : "none";
+    }
+
+    function applyBizFilters(items){
+      const q = el("bizSearch").value.trim().toLowerCase();
+      const sort = el("bizSort").value;
+
+      let out = items.filter(b => {
+        if (!q) return true;
+        const hay = `${b.name||""} ${b.category||""} ${b.location||""}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      if (sort === "name_asc") out.sort((a,b) => (a.name||"").localeCompare(b.name||""));
+      if (sort === "name_desc") out.sort((a,b) => (b.name||"").localeCompare(a.name||""));
+      if (sort === "location_asc") out.sort((a,b) => (a.location||"").localeCompare(b.location||""));
+
+      return out;
+    }
+
+    function renderBusinesses(){
+      const box = el("bizList");
+      const items = applyBizFilters(state.businesses);
+
+      el("metaBusinesses").textContent = String(items.length);
+      if (state.page === "browseBusinesses") el("countBadge").textContent = `${items.length} items`;
+
+      box.innerHTML = "";
+      if (!items.length){
+        box.innerHTML = `<div class="hint">No businesses match your search. Create one in Owner Panel.</div>`;
+        return;
+      }
+
+      items.forEach(b => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div>
+            <div class="titleRow">
+              <h3>${escapeHtml(b.name)}</h3>
+              <span class="badge brand">${escapeHtml(b.category || "Business")}</span>
+            </div>
+            <p>
+              Location: ${escapeHtml(b.location || "—")}<br/>
+              Owner: ${escapeHtml(b.owner_name || "—")}
+            </p>
+          </div>
+          <div class="actions">
+            ${
+              state.user && state.user.role === "worker"
+                ? `<button class="btn primary" data-join="${b.id}">Request to Join</button>`
+                : `<span class="badge">Browse</span>`
+            }
+          </div>
+        `;
+        box.appendChild(div);
+      });
+
+      box.querySelectorAll("[data-join]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          try{
+            if (!state.user || state.user.role !== "worker") throw new Error("Login as a Worker first.");
+            const business_id = Number(btn.dataset.join);
+
+            openModal({
+              title: "Confirm request",
+              bodyHtml: `
+                <div class="hint">Send a join request to this business?</div>
+                <div style="height:10px;"></div>
+                <div class="badge brand">Business ID: ${escapeHtml(business_id)}</div>
+              `,
+              actions: [
+                { label:"Cancel", variant:"ghost" },
+                {
+                  label:"Send Request",
+                  variant:"primary",
+                  onClick: async () => {
+                    await api("/api/worker/register_business", {
+                      method:"POST",
+                      body: JSON.stringify({ worker_user_id: state.user.id, business_id })
+                    });
+                    toast("ok", "Request sent", "Owner will approve your request soon.");
+                  }
+                }
+              ]
+            });
+
+          }catch(e){
+            toast("bad", "Failed", e.message);
+          }
+        });
       });
     }
-    document.querySelectorAll(".tab").forEach(t => {
-      t.addEventListener("click", () => showTab(t.dataset.tab));
-    });
 
-    // Health
-    async function checkHealth(){
-      try{
-        await api("/api/health");
-        setHealth(true);
-      }catch(e){
-        setHealth(false);
-      }
-    }
+    async function refreshBusinesses(){
+      renderSkeleton("bizList", 4);
+      const data = await api("/api/businesses");
+      state.businesses = data.items || [];
 
-    // Auth
-    el("btnQuickAdmin").addEventListener("click", () => {
-      el("loginEmail").value = "admin@workhub.local";
-      el("loginPass").value = "admin123";
-    });
+      // fill business dropdown for workers page
+      const sel = el("filterBusiness");
+      const keep = sel.value;
+      sel.innerHTML = `<option value="">All businesses</option>` + state.businesses.map(b =>
+        `<option value="${b.id}">${escapeHtml(b.name)} • ${escapeHtml(b.location || "—")}</option>`
+      ).join("");
+      sel.value = keep || "";
 
-    el("btnLogin").addEventListener("click", async () => {
-      hideMsg("loginMsg");
-      try{
-        const email = el("loginEmail").value.trim();
-        const password = el("loginPass").value;
-
-        const data = await api("/api/login", {
-          method:"POST",
-          body: JSON.stringify({ email, password })
-        });
-
-        state.user = data.user;
-        setMsg("loginMsg", "Logged in successfully.", "ok");
-        updateTop();
-
-        if (state.user.role === "owner") showTab("owner");
-        else if (state.user.role === "worker") showTab("profile");
-        else showTab("login");
-
-        await refreshAll();
-      }catch(e){
-        setMsg("loginMsg", e.message, "bad");
-      }
-    });
-
-    el("btnRegister").addEventListener("click", async () => {
-      hideMsg("regMsg");
-      try{
-        const role = el("regRole").value;
-        const name = el("regName").value.trim();
-        const email = el("regEmail").value.trim();
-        const phone = el("regPhone").value.trim();
-        const password = el("regPass").value;
-
-        const data = await api("/api/register", {
-          method:"POST",
-          body: JSON.stringify({ role, name, email, phone, password })
-        });
-
-        setMsg("regMsg", `Account created for ${data.user.name}. Now login.`, "ok");
-      }catch(e){
-        setMsg("regMsg", e.message, "bad");
-      }
-    });
-
-    el("btnLogout").addEventListener("click", () => {
-      state.user = null;
-      updateTop();
-      showTab("login");
-      refreshAll();
-    });
-
-    // Worker
-    el("btnSaveProfile").addEventListener("click", async () => {
-      hideMsg("wpMsg");
-      try{
-        if (!state.user || state.user.role !== "worker") throw new Error("Login as a Worker first.");
-        const skills = el("wpSkills").value.trim();
-        const experience_years = Number(el("wpExp").value || 0);
-        const location = el("wpLoc").value.trim();
-
-        await api("/api/worker/profile", {
-          method:"POST",
-          body: JSON.stringify({ user_id: state.user.id, skills, experience_years, location })
-        });
-
-        setMsg("wpMsg", "Profile saved.", "ok");
-        await refreshWorkers();
-      }catch(e){
-        setMsg("wpMsg", e.message, "bad");
-      }
-    });
-
-    el("btnSetStatus").addEventListener("click", async () => {
-      hideMsg("wpMsg");
-      try{
-        if (!state.user || state.user.role !== "worker") throw new Error("Login as a Worker first.");
-        const status = el("wpStatus").value;
-
-        await api("/api/worker/status", {
-          method:"POST",
-          body: JSON.stringify({ user_id: state.user.id, status })
-        });
-
-        setMsg("wpMsg", "Status updated.", "ok");
-        await refreshWorkers();
-      }catch(e){
-        setMsg("wpMsg", e.message, "bad");
-      }
-    });
-
-    // Owner
-    el("btnCreateBiz").addEventListener("click", async () => {
-      hideMsg("ownerMsg");
-      try{
-        if (!state.user || state.user.role !== "owner") throw new Error("Login as an Owner first.");
-
-        const name = el("bizName").value.trim();
-        const category = el("bizCat").value.trim();
-        const location = el("bizLoc").value.trim();
-
-        const data = await api("/api/owner/businesses", {
-          method:"POST",
-          body: JSON.stringify({ owner_id: state.user.id, name, category, location })
-        });
-
-        setMsg("ownerMsg", `Business created: ${data.business.name}`, "ok");
-        el("bizName").value = "";
-        await refreshBusinesses();
-        if (state.view === "businesses") renderBusinesses();
-      }catch(e){
-        setMsg("ownerMsg", e.message, "bad");
-      }
-    });
-
-    el("btnLoadRequests").addEventListener("click", async () => {
-      hideMsg("ownerMsg");
-      try{
-        if (!state.user || state.user.role !== "owner") throw new Error("Login as an Owner first.");
-        const data = await api(`/api/owner/pending_requests?owner_id=${state.user.id}`);
-        renderRequests(data.items || []);
-        setMsg("ownerMsg", `Loaded ${data.items.length} pending request(s).`, "ok");
-      }catch(e){
-        setMsg("ownerMsg", e.message, "bad");
-      }
-    });
-
-    el("btnGoBusinesses").addEventListener("click", async () => {
-      state.view = "businesses";
-      await refreshBusinesses();
       renderBusinesses();
-    });
+      refreshCountBadges();
+    }
 
+    /* =========================
+       Workers
+    ========================== */
+    function statusBadge(s){
+      if (s === "ready") return `<span class="badge ok">Ready</span>`;
+      if (s === "busy") return `<span class="badge bad">Busy</span>`;
+      return `<span class="badge warn">Pending</span>`;
+    }
+    function stars(avg){
+      const a = Number(avg || 0);
+      const full = Math.max(0, Math.min(5, Math.round(a)));
+      return "★★★★★".slice(0, full) + "☆☆☆☆☆".slice(0, 5-full);
+    }
+
+    function applyWorkerFilters(items){
+      const q = el("workerSearch").value.trim().toLowerCase();
+      const business_id = el("filterBusiness").value;
+      const status = el("filterStatus").value;
+      const sort = el("workerSort").value;
+
+      let out = items.filter(w => {
+        if (business_id && String(w.business_id || "") !== String(business_id)) return false;
+        if (status && String(w.status || "") !== String(status)) return false;
+
+        if (!q) return true;
+        const hay = `${w.name||""} ${w.skills||""} ${w.location||""}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      if (sort === "rating_desc") out.sort((a,b) => (Number(b.avg_rating||0) - Number(a.avg_rating||0)));
+      if (sort === "rating_asc") out.sort((a,b) => (Number(a.avg_rating||0) - Number(b.avg_rating||0)));
+      if (sort === "name_asc") out.sort((a,b) => (a.name||"").localeCompare(b.name||""));
+      if (sort === "name_desc") out.sort((a,b) => (b.name||"").localeCompare(a.name||""));
+
+      return out;
+    }
+
+    function renderWorkers(){
+      const box = el("workerList");
+      const items = applyWorkerFilters(state.workers);
+
+      el("metaWorkers").textContent = String(items.length);
+      if (state.page === "browseWorkers") el("countBadge").textContent = `${items.length} items`;
+
+      box.innerHTML = "";
+      if (!items.length){
+        box.innerHTML = `<div class="hint">No workers found with current filters.</div>`;
+        return;
+      }
+
+      items.forEach(w => {
+        const avg = Number(w.avg_rating || 0).toFixed(1);
+        const cnt = Number(w.rating_count || 0);
+
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div>
+            <div class="titleRow">
+              <h3>${escapeHtml(w.name)}</h3>
+              ${statusBadge(w.status)}
+              <span class="badge brand">${stars(avg)} • ${escapeHtml(avg)} (${escapeHtml(cnt)})</span>
+            </div>
+            <p>
+              Skills: ${escapeHtml(w.skills || "—")}<br/>
+              Exp: ${escapeHtml(String(w.experience_years ?? 0))} yrs • Location: ${escapeHtml(w.location || "—")}
+            </p>
+          </div>
+          <div class="actions">
+            <span class="badge">📞 ${escapeHtml(w.phone || "—")}</span>
+            <span class="badge">✉️ ${escapeHtml(w.email || "—")}</span>
+            ${state.user ? `<button class="btn primary" data-rate="${w.user_id}">Rate</button>` : ``}
+          </div>
+        `;
+        box.appendChild(div);
+      });
+
+      box.querySelectorAll("[data-rate]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (!state.user){
+            toast("warn", "Login required", "Please login to submit ratings.");
+            setPage("auth");
+            return;
+          }
+          const worker_user_id = Number(btn.dataset.rate);
+
+          openModal({
+            title: "Rate worker",
+            bodyHtml: `
+              <div class="row">
+                <div class="field">
+                  <label>Stars</label>
+                  <select id="mRateStars">
+                    <option value="5">★★★★★ (5)</option>
+                    <option value="4">★★★★☆ (4)</option>
+                    <option value="3">★★★☆☆ (3)</option>
+                    <option value="2">★★☆☆☆ (2)</option>
+                    <option value="1">★☆☆☆☆ (1)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Review (optional)</label>
+                  <input id="mRateText" placeholder="Write a short review…"/>
+                </div>
+              </div>
+              <div class="hint">Your rating helps businesses find trusted workers.</div>
+            `,
+            actions: [
+              { label:"Cancel", variant:"ghost" },
+              {
+                label:"Submit",
+                variant:"primary",
+                onClick: async () => {
+                  const rating = Number(el("mRateStars").value);
+                  const review = (el("mRateText").value || "").trim();
+
+                  await api("/api/ratings", {
+                    method:"POST",
+                    body: JSON.stringify({
+                      worker_user_id,
+                      rater_user_id: state.user.id,
+                      rating,
+                      review
+                    })
+                  });
+
+                  toast("ok", "Rating submitted", "Thanks! Your review has been saved.");
+                  await refreshWorkers();
+                }
+              }
+            ]
+          });
+        });
+      });
+    }
+
+    async function refreshWorkers(){
+      renderSkeleton("workerList", 5);
+
+      const status = el("filterStatus").value;
+      const business_id = el("filterBusiness").value;
+
+      const qs = new URLSearchParams();
+      if (status) qs.set("status", status);
+      if (business_id) qs.set("business_id", business_id);
+
+      const data = await api(`/api/workers?${qs.toString()}`);
+      state.workers = data.items || [];
+
+      renderWorkers();
+      refreshCountBadges();
+    }
+
+    /* =========================
+       Owner Requests
+    ========================== */
     function renderRequests(items){
       const box = el("requestList");
       box.innerHTML = "";
+
       if (!items.length){
-        box.innerHTML = `<div class="muted">No pending requests.</div>`;
+        box.innerHTML = `<div class="hint">No pending requests.</div>`;
         return;
       }
 
@@ -833,249 +1325,211 @@
       box.querySelectorAll("[data-approve]").forEach(btn => {
         btn.addEventListener("click", async () => {
           try{
-            btn.disabled = true;
+            if (!state.user || state.user.role !== "owner") throw new Error("Login as an Owner first.");
             const request_id = Number(btn.dataset.approve);
-            await api("/api/owner/approve_request", {
-              method:"POST",
-              body: JSON.stringify({ owner_id: state.user.id, request_id })
-            });
 
-            setMsg("ownerMsg", "Request approved.", "ok");
-            const data = await api(`/api/owner/pending_requests?owner_id=${state.user.id}`);
-            renderRequests(data.items || []);
+            openModal({
+              title: "Approve worker request",
+              bodyHtml: `<div class="hint">Approve this worker request?</div>`,
+              actions: [
+                { label:"Cancel", variant:"ghost" },
+                {
+                  label:"Approve",
+                  variant:"primary",
+                  onClick: async () => {
+                    await api("/api/owner/approve_request", {
+                      method:"POST",
+                      body: JSON.stringify({ owner_id: state.user.id, request_id })
+                    });
+                    toast("ok", "Approved", "Worker is approved for the business.");
+                    await loadOwnerRequests();
+                  }
+                }
+              ]
+            });
           }catch(e){
-            setMsg("ownerMsg", e.message, "bad");
-          }finally{
-            btn.disabled = false;
+            toast("bad", "Failed", e.message);
           }
         });
       });
     }
 
-    // Browse
-    el("btnBusinesses").addEventListener("click", async () => {
-      state.view = "businesses";
-      await refreshBusinesses();
-      renderBusinesses();
-    });
-
-    el("btnWorkers").addEventListener("click", async () => {
-      state.view = "workers";
-      await refreshWorkers();
-    });
-
-    el("btnRefresh").addEventListener("click", refreshAll);
-
-    el("filterBusiness").addEventListener("change", () => {
-      if (state.view === "workers") refreshWorkers();
-    });
-    el("filterStatus").addEventListener("change", () => {
-      if (state.view === "workers") refreshWorkers();
-    });
-
-    // Data
-    async function refreshBusinesses(){
-      const data = await api("/api/businesses");
-      state.businesses = data.items || [];
-      const sel = el("filterBusiness");
-      const keep = sel.value;
-
-      sel.innerHTML = `<option value="">All businesses</option>` + state.businesses.map(b =>
-        `<option value="${b.id}">${escapeHtml(b.name)} • ${escapeHtml(b.location || "—")}</option>`
-      ).join("");
-
-      sel.value = keep || "";
-    }
-
-    function statusBadge(s){
-      if (s === "ready") return `<span class="badge ok">Ready</span>`;
-      if (s === "busy") return `<span class="badge bad">Busy</span>`;
-      return `<span class="badge warn">Pending</span>`;
-    }
-
-    function stars(avg){
-      const a = Number(avg || 0);
-      const full = Math.max(0, Math.min(5, Math.round(a)));
-      return "★★★★★".slice(0, full) + "☆☆☆☆☆".slice(0, 5-full);
-    }
-
-    function renderBusinesses(){
-      const box = el("list");
-      box.innerHTML = "";
-      const items = state.businesses;
-      el("countBadge").textContent = `${items.length} businesses`;
-
-      if (!items.length){
-        box.innerHTML = `<div class="muted">No businesses yet. Create one as an Owner.</div>`;
+    async function loadOwnerRequests(){
+      if (!state.user || state.user.role !== "owner"){
+        toast("warn", "Owner required", "Login as Owner to load requests.");
         return;
       }
-
-      items.forEach(b => {
-        const div = document.createElement("div");
-        div.className = "item";
-        div.innerHTML = `
-          <div>
-            <div class="titleRow">
-              <h3>${escapeHtml(b.name)}</h3>
-              <span class="badge brand">${escapeHtml(b.category || "Business")}</span>
-            </div>
-            <p>
-              Location: ${escapeHtml(b.location || "—")}<br/>
-              Owner: ${escapeHtml(b.owner_name || "—")}
-            </p>
-          </div>
-          <div class="actions">
-            ${state.user && state.user.role === "worker"
-              ? `<button class="btn primary" data-join="${b.id}">Request to Join</button>`
-              : `<span class="badge">Browse</span>`
-            }
-          </div>
-        `;
-        box.appendChild(div);
-      });
-
-      box.querySelectorAll("[data-join]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          try{
-            if (!state.user || state.user.role !== "worker") throw new Error("Login as a Worker first.");
-            btn.disabled = true;
-
-            const business_id = Number(btn.dataset.join);
-            await api("/api/worker/register_business", {
-              method:"POST",
-              body: JSON.stringify({ worker_user_id: state.user.id, business_id })
-            });
-
-            alert("Request sent to owner for approval.");
-          }catch(e){
-            alert(e.message);
-          }finally{
-            btn.disabled = false;
-          }
-        });
-      });
+      renderSkeleton("requestList", 3);
+      const data = await api(`/api/owner/pending_requests?owner_id=${state.user.id}`);
+      renderRequests(data.items || []);
     }
 
-    async function refreshWorkers(){
-      const box = el("list");
-      box.innerHTML = `<div class="muted">Loading workers…</div>`;
+    /* =========================
+       Auth + Worker/Owner actions
+    ========================== */
+    el("btnQuickAdmin").addEventListener("click", () => {
+      el("loginEmail").value = "admin@workhub.local";
+      el("loginPass").value = "admin123";
+      toast("ok", "Filled demo credentials", "Now click Login.");
+    });
 
-      const status = el("filterStatus").value;
-      const business_id = el("filterBusiness").value;
-
-      const qs = new URLSearchParams();
-      if (status) qs.set("status", status);
-      if (business_id) qs.set("business_id", business_id);
-
+    el("btnLogin").addEventListener("click", async () => {
       try{
-        const data = await api(`/api/workers?${qs.toString()}`);
-        const items = data.items || [];
-        el("countBadge").textContent = `${items.length} workers`;
-        renderWorkers(items);
+        const email = el("loginEmail").value.trim();
+        const password = el("loginPass").value;
+
+        const data = await api("/api/login", {
+          method:"POST",
+          body: JSON.stringify({ email, password })
+        });
+
+        state.user = data.user;
+        updateWho();
+        toast("ok", "Logged in", `Welcome ${data.user.name} (${roleName(data.user.role)})`);
+
+        // send user to role page
+        if (state.user.role === "owner") setPage("owner");
+        else if (state.user.role === "worker") setPage("worker");
+        else setPage("browseBusinesses");
+
+        await refreshAll();
       }catch(e){
-        box.innerHTML = `<div class="msg bad">${escapeHtml(e.message)}</div>`;
+        toast("bad", "Login failed", e.message);
       }
-    }
+    });
 
-    function renderWorkers(items){
-      const box = el("list");
-      box.innerHTML = "";
+    el("btnRegister").addEventListener("click", async () => {
+      try{
+        const role = el("regRole").value;
+        const name = el("regName").value.trim();
+        const email = el("regEmail").value.trim();
+        const phone = el("regPhone").value.trim();
+        const password = el("regPass").value;
 
-      if (!items.length){
-        box.innerHTML = `<div class="muted">No workers found for current filters.</div>`;
+        const data = await api("/api/register", {
+          method:"POST",
+          body: JSON.stringify({ role, name, email, phone, password })
+        });
+
+        toast("ok", "Account created", `Created user: ${data.user.name}. Now login.`);
+      }catch(e){
+        toast("bad", "Register failed", e.message);
+      }
+    });
+
+    el("btnLogout").addEventListener("click", () => {
+      state.user = null;
+      updateWho();
+      toast("ok", "Logged out", "You are now logged out.");
+      setPage("browseBusinesses");
+    });
+
+    el("btnCreateBiz").addEventListener("click", async () => {
+      if (!state.user || state.user.role !== "owner"){
+        toast("warn", "Owner required", "Login as Owner to create business.");
+        setPage("auth");
         return;
       }
+      // uses inline fields on owner page
+      try{
+        const name = el("bizName").value.trim();
+        const category = el("bizCat").value.trim();
+        const location = el("bizLoc").value.trim();
 
-      items.forEach(w => {
-        const div = document.createElement("div");
-        div.className = "item";
-
-        const avg = Number(w.avg_rating || 0).toFixed(1);
-        const cnt = Number(w.rating_count || 0);
-
-        div.innerHTML = `
-          <div>
-            <div class="titleRow">
-              <h3>${escapeHtml(w.name)}</h3>
-              ${statusBadge(w.status)}
-              <span class="badge brand">${stars(avg)} • ${escapeHtml(avg)} (${escapeHtml(cnt)})</span>
-            </div>
-
-            <p>
-              Skills: ${escapeHtml(w.skills || "—")}<br/>
-              Exp: ${escapeHtml(String(w.experience_years ?? 0))} yrs • Location: ${escapeHtml(w.location || "—")}
-            </p>
-
-            ${state.user ? `
-              <div class="rateRow">
-                <select data-rate-stars="${w.user_id}">
-                  <option value="5">★★★★★ (5)</option>
-                  <option value="4">★★★★☆ (4)</option>
-                  <option value="3">★★★☆☆ (3)</option>
-                  <option value="2">★★☆☆☆ (2)</option>
-                  <option value="1">★☆☆☆☆ (1)</option>
-                </select>
-                <input data-rate-text="${w.user_id}" placeholder="Write a short review (optional)" />
-                <button class="btn primary" data-rate-btn="${w.user_id}">Rate</button>
-              </div>
-            ` : `<div class="hint" style="margin-top:10px;">Login to rate workers.</div>`}
-          </div>
-
-          <div class="actions">
-            <span class="badge">📞 ${escapeHtml(w.phone || "—")}</span>
-            <span class="badge">✉️ ${escapeHtml(w.email || "—")}</span>
-          </div>
-        `;
-        box.appendChild(div);
-      });
-
-      // rating handlers
-      box.querySelectorAll("[data-rate-btn]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          try{
-            if (!state.user) throw new Error("Login required to rate.");
-
-            const workerId = Number(btn.dataset.rateBtn);
-            const starsEl = box.querySelector(`[data-rate-stars="${workerId}"]`);
-            const textEl = box.querySelector(`[data-rate-text="${workerId}"]`);
-
-            const rating = Number(starsEl.value);
-            const review = (textEl.value || "").trim();
-
-            btn.disabled = true;
-            await api("/api/ratings", {
-              method: "POST",
-              body: JSON.stringify({
-                worker_user_id: workerId,
-                rater_user_id: state.user.id,
-                rating,
-                review
-              })
-            });
-
-            alert("Rating submitted.");
-            await refreshWorkers();
-          }catch(e){
-            alert(e.message);
-          }finally{
-            btn.disabled = false;
-          }
+        await api("/api/owner/businesses", {
+          method:"POST",
+          body: JSON.stringify({ owner_id: state.user.id, name, category, location })
         });
-      });
+
+        toast("ok", "Business created", "Your business is now live.");
+        el("bizName").value = "";
+        await refreshBusinesses();
+      }catch(e){
+        toast("bad", "Create failed", e.message);
+      }
+    });
+
+    el("btnLoadRequests").addEventListener("click", loadOwnerRequests);
+
+    el("btnSaveProfile").addEventListener("click", async () => {
+      try{
+        if (!state.user || state.user.role !== "worker") throw new Error("Login as Worker first.");
+        const skills = el("wpSkills").value.trim();
+        const experience_years = Number(el("wpExp").value || 0);
+        const location = el("wpLoc").value.trim();
+
+        await api("/api/worker/profile", {
+          method:"POST",
+          body: JSON.stringify({ user_id: state.user.id, skills, experience_years, location })
+        });
+
+        toast("ok", "Saved", "Worker profile updated.");
+        await refreshWorkers();
+      }catch(e){
+        toast("bad", "Save failed", e.message);
+      }
+    });
+
+    el("btnSetStatus").addEventListener("click", async () => {
+      try{
+        if (!state.user || state.user.role !== "worker") throw new Error("Login as Worker first.");
+        const status = el("wpStatus").value;
+
+        await api("/api/worker/status", {
+          method:"POST",
+          body: JSON.stringify({ user_id: state.user.id, status })
+        });
+
+        toast("ok", "Updated", "Status updated successfully.");
+        await refreshWorkers();
+      }catch(e){
+        toast("bad", "Update failed", e.message);
+      }
+    });
+
+    /* =========================
+       Filters events
+    ========================== */
+    el("bizSearch").addEventListener("input", renderBusinesses);
+    el("bizSort").addEventListener("change", renderBusinesses);
+
+    el("workerSearch").addEventListener("input", renderWorkers);
+    el("filterBusiness").addEventListener("change", refreshWorkers);
+    el("filterStatus").addEventListener("change", refreshWorkers);
+    el("workerSort").addEventListener("change", renderWorkers);
+
+    /* =========================
+       Refresh
+    ========================== */
+    el("btnRefresh").addEventListener("click", async () => {
+      toast("ok", "Refreshing", "Updating businesses and workers…", 1500);
+      await refreshAll();
+    });
+
+    async function checkHealth(){
+      try{
+        await api("/api/health");
+        setHealth(true);
+      }catch(e){
+        setHealth(false);
+      }
     }
 
     async function refreshAll(){
       await checkHealth();
       await refreshBusinesses();
-      if (state.view === "businesses") renderBusinesses();
-      else await refreshWorkers();
-      updateTop();
+      await refreshWorkers();
+      refreshCountBadges();
     }
 
-    // init
+    /* =========================
+       Init
+    ========================== */
     (async function init(){
+      updateWho();
+      setPage("browseBusinesses");
       await refreshAll();
-      state.view = "businesses";
+      toast("ok", "WorkHub ready", "Premium UI loaded successfully.", 2200);
     })();
   </script>
 </body>
