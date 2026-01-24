@@ -2,184 +2,395 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WorkHub • Connect Businesses & Workers</title>
+
   <style>
     :root{
       --bg:#0b1220;
-      --panel:#0f1b33;
-      --card:#121f3b;
-      --muted:#8aa0c6;
-      --text:#eaf2ff;
-      --line:rgba(138,160,198,.25);
-      --brand:#4aa3ff;
-      --ok:#2ce38a;
-      --warn:#ffcc66;
-      --bad:#ff6b6b;
-      --shadow: 0 18px 60px rgba(0,0,0,.35);
-      --r:16px;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.10);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.70);
+      --brand:#6ee7ff;
+      --brand2:#a78bfa;
+      --ok:#34d399;
+      --bad:#fb7185;
+      --warn:#fbbf24;
+      --shadow: 0 16px 40px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius2:14px;
     }
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(1000px 600px at 10% -10%, rgba(74,163,255,.25), transparent 60%),
-                  radial-gradient(900px 600px at 110% 0%, rgba(44,227,138,.18), transparent 55%),
-                  var(--bg);
       color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+      background:
+        radial-gradient(1200px 700px at 10% 10%, rgba(110,231,255,.18), transparent 55%),
+        radial-gradient(900px 600px at 90% 20%, rgba(167,139,250,.18), transparent 50%),
+        radial-gradient(900px 600px at 40% 90%, rgba(52,211,153,.10), transparent 55%),
+        var(--bg);
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:22px}
-    header{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-      padding:14px 16px;border:1px solid var(--line);border-radius:20px;background:rgba(15,27,51,.55);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-      position: sticky; top: 12px; z-index: 20;
+    a{ color:inherit; }
+
+    .wrap{ max-width:1150px; margin:0 auto; padding:26px 18px 60px; }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow:var(--shadow);
+      border-radius:var(--radius);
+      position:sticky; top:12px; backdrop-filter: blur(10px);
+      z-index:10;
     }
-    .brand{display:flex;gap:10px;align-items:center}
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
     .logo{
-      width:42px;height:42px;border-radius:14px;
-      background: linear-gradient(135deg, rgba(74,163,255,.95), rgba(44,227,138,.9));
-      box-shadow: 0 10px 25px rgba(74,163,255,.25);
+      width:40px; height:40px; border-radius:14px;
+      background:linear-gradient(135deg, rgba(110,231,255,.95), rgba(167,139,250,.90));
+      box-shadow: 0 10px 28px rgba(110,231,255,.18);
+      display:grid; place-items:center;
+      font-weight:900; color:#07101f;
+      user-select:none;
     }
-    .brand h1{font-size:18px;margin:0;line-height:1.1}
-    .brand p{margin:0;color:var(--muted);font-size:12px}
-    .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .brand h1{ margin:0; font-size:16px; letter-spacing:.2px; }
+    .brand p{ margin:0; font-size:12px; color:var(--muted); }
+
+    .right{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      justify-content:flex-end;
+    }
     .pill{
-      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
-      background:rgba(18,31,59,.65);color:var(--muted);font-size:12px
+      font-size:12px; color:var(--muted);
+      border:1px solid var(--line);
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(0,0,0,.15);
     }
     .btn{
       border:1px solid var(--line);
-      background:rgba(18,31,59,.75);
+      background:rgba(255,255,255,.06);
       color:var(--text);
-      padding:10px 12px;
+      padding:9px 12px;
       border-radius:12px;
       cursor:pointer;
-      transition:.15s;
+      transition:.18s ease;
+      font-weight:650;
     }
-    .btn:hover{transform: translateY(-1px); border-color: rgba(74,163,255,.55)}
-    .btn.primary{background: rgba(74,163,255,.15); border-color: rgba(74,163,255,.55)}
-    .btn.ok{background: rgba(44,227,138,.12); border-color: rgba(44,227,138,.55)}
-    .btn.bad{background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.55)}
+    .btn:hover{ transform: translateY(-1px); background:rgba(255,255,255,.09); }
+    .btn.primary{
+      border-color: rgba(110,231,255,.35);
+      background: linear-gradient(135deg, rgba(110,231,255,.18), rgba(167,139,250,.14));
+    }
+    .btn.danger{
+      border-color: rgba(251,113,133,.40);
+      background: rgba(251,113,133,.12);
+    }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
     .grid{
-      display:grid;gap:16px;margin-top:18px;
-      grid-template-columns: 1.1fr .9fr;
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:16px;
     }
-    @media(max-width: 980px){ .grid{grid-template-columns:1fr} header{position:static} }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns:1fr; }
+      .topbar{ position:relative; top:0; }
+    }
+
     .card{
       border:1px solid var(--line);
-      background: rgba(18,31,59,.6);
-      border-radius: var(--r);
+      background: rgba(255,255,255,.06);
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
     }
     .card .hd{
-      padding:14px 16px;border-bottom:1px solid var(--line);
-      display:flex;justify-content:space-between;align-items:center;gap:10px
-    }
-    .card .hd h2{margin:0;font-size:14px;letter-spacing:.2px}
-    .card .bd{padding:16px}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .field{flex:1;min-width:200px}
-    label{display:block;color:var(--muted);font-size:12px;margin:0 0 6px}
-    input, select, textarea{
-      width:100%;
-      padding:11px 12px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background: rgba(11,18,32,.65);
-      color:var(--text);
-      outline:none;
-    }
-    textarea{min-height:90px;resize:vertical}
-    .help{color:var(--muted);font-size:12px;margin-top:10px}
-    .msg{margin-top:10px;font-size:13px}
-    .msg.ok{color:var(--ok)}
-    .msg.bad{color:var(--bad)}
-    .table{
-      width:100%;
-      border-collapse: collapse;
-      font-size:13px;
-    }
-    .table th, .table td{
+      padding:14px 14px 12px;
       border-bottom:1px solid var(--line);
-      padding:10px 8px;
-      text-align:left;
-      vertical-align:top;
+      background: rgba(255,255,255,.04);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
     }
-    .table th{color:var(--muted);font-weight:600}
-    .tag{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:5px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);
-      background: rgba(11,18,32,.5); color: var(--muted);
+    .card .hd h2{ margin:0; font-size:14px; }
+    .card .hd p{ margin:6px 0 0; font-size:12px; color:var(--muted); line-height:1.4; }
+    .card .bd{ padding:14px; }
+
+    .row{ display:flex; gap:10px; }
+    .row > *{ flex:1; }
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    .field label{ font-size:12px; color:var(--muted); }
+    input, select, textarea{
+      background: rgba(0,0,0,.22);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 10px;
+      color: var(--text);
+      outline:none;
+      font-size:14px;
     }
-    .dot{width:8px;height:8px;border-radius:99px;background:var(--muted)}
-    .dot.ready{background:var(--ok)}
-    .dot.busy{background:var(--warn)}
-    .dot.pending{background:var(--muted)}
-    .muted{color:var(--muted)}
-    .sep{height:1px;background:var(--line);margin:14px 0}
-    .kpi{display:flex;gap:10px;flex-wrap:wrap}
-    .kpi .box{
-      flex:1;min-width:160px;padding:12px;border:1px solid var(--line);
-      border-radius:14px;background:rgba(11,18,32,.45)
+    textarea{ min-height: 84px; resize: vertical; }
+    input::placeholder, textarea::placeholder{ color: rgba(234,240,255,.40); }
+
+    .msg{
+      margin-top:10px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      padding:10px 10px;
+      border-radius: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height:1.4;
     }
-    .kpi .box b{font-size:18px}
-    .kpi .box div{color:var(--muted);font-size:12px;margin-top:4px}
-    a{color:var(--brand);text-decoration:none}
-    a:hover{text-decoration:underline}
+    .msg.ok{ border-color: rgba(52,211,153,.35); color: rgba(203,255,231,.90); background: rgba(52,211,153,.10); }
+    .msg.bad{ border-color: rgba(251,113,133,.38); color: rgba(255,210,219,.92); background: rgba(251,113,133,.10); }
+    .msg.warn{ border-color: rgba(251,191,36,.35); color: rgba(255,244,204,.92); background: rgba(251,191,36,.10); }
+
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+      padding:12px 14px 0;
+    }
+    .tab{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.15);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      cursor:pointer;
+      color: var(--muted);
+      user-select:none;
+    }
+    .tab.active{
+      color: var(--text);
+      border-color: rgba(110,231,255,.35);
+      background: linear-gradient(135deg, rgba(110,231,255,.16), rgba(167,139,250,.12));
+    }
+
+    .list{
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .item{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      border-radius: var(--radius2);
+      padding: 12px;
+      display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
+    }
+    .item h3{ margin:0; font-size:13px; }
+    .item p{ margin:5px 0 0; font-size:12px; color:var(--muted); line-height:1.35; }
+    .item .meta{ font-size:12px; color:var(--muted); }
+    .item .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .badge.ok{ border-color: rgba(52,211,153,.35); color: rgba(203,255,231,.90); background: rgba(52,211,153,.10); }
+    .badge.bad{ border-color: rgba(251,113,133,.38); color: rgba(255,210,219,.92); background: rgba(251,113,133,.10); }
+    .badge.warn{ border-color: rgba(251,191,36,.35); color: rgba(255,244,204,.92); background: rgba(251,191,36,.10); }
+    .badge.brand{ border-color: rgba(110,231,255,.35); color: rgba(222,250,255,.95); background: rgba(110,231,255,.10); }
+
+    .muted{ color:var(--muted); font-size:12px; }
+    .hr{ height:1px; background:var(--line); margin:12px 0; }
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <header>
+    <div class="topbar">
       <div class="brand">
-        <div class="logo"></div>
+        <div class="logo">WH</div>
         <div>
           <h1>WorkHub</h1>
-          <p>Businesses ↔ Workers • Simple, role-based, city-ready</p>
+          <p>Businesses ⇄ Workers • Vizag-first • Simple & fast</p>
         </div>
       </div>
+
       <div class="right">
-        <span class="pill" id="pill">Not logged in</span>
-        <button class="btn" id="btnLogout" style="display:none">Logout</button>
-        <button class="btn primary" id="btnRefresh">Refresh Data</button>
+        <div class="pill" id="healthPill">API: checking…</div>
+        <div class="pill" id="whoPill">Not logged in</div>
+        <button class="btn" id="btnRefresh">Refresh</button>
+        <button class="btn danger" id="btnLogout" disabled>Logout</button>
       </div>
-    </header>
+    </div>
 
     <div class="grid">
-      <!-- LEFT: Public browsing -->
+      <!-- LEFT: Auth + Profile -->
       <div class="card">
         <div class="hd">
-          <h2>Browse</h2>
-          <span class="tag"><span class="dot pending"></span> Live Data</span>
+          <div>
+            <h2>Account</h2>
+            <p>Login or create an account. Owner & Worker supported.</p>
+          </div>
         </div>
+
+        <div class="tabs">
+          <div class="tab active" data-tab="login">Login</div>
+          <div class="tab" data-tab="register">Register</div>
+          <div class="tab" data-tab="profile">Worker Profile</div>
+          <div class="tab" data-tab="owner">Owner Panel</div>
+        </div>
+
         <div class="bd">
-          <div class="kpi">
-            <div class="box">
-              <b id="kpiBusinesses">0</b>
-              <div>Businesses</div>
+          <!-- LOGIN -->
+          <div class="panel" id="panel-login">
+            <div class="field">
+              <label>Email</label>
+              <input id="loginEmail" placeholder="name@example.com" />
             </div>
-            <div class="box">
-              <b id="kpiWorkers">0</b>
-              <div>Workers</div>
+            <div class="field">
+              <label>Password</label>
+              <input id="loginPass" type="password" placeholder="••••••••" />
             </div>
-            <div class="box">
-              <b id="kpiReady">0</b>
-              <div>Ready now</div>
+            <button class="btn primary" id="btnLogin">Login</button>
+            <div class="msg" id="loginMsg" style="display:none;"></div>
+
+            <div class="hr"></div>
+            <div class="muted">
+              Admin test login (seeded by backend): <b>admin@workhub.local</b> / <b>admin123</b>
             </div>
           </div>
 
-          <div class="sep"></div>
-
-          <div class="row">
+          <!-- REGISTER -->
+          <div class="panel" id="panel-register" style="display:none;">
             <div class="field">
-              <label>Filter workers by business</label>
-              <select id="filterBusiness"></select>
+              <label>Role</label>
+              <select id="regRole">
+                <option value="owner">Business Owner</option>
+                <option value="worker">Worker</option>
+              </select>
             </div>
             <div class="field">
-              <label>Filter by status</label>
+              <label>Name</label>
+              <input id="regName" placeholder="Full name" />
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Email</label>
+                <input id="regEmail" placeholder="name@example.com" />
+              </div>
+              <div class="field">
+                <label>Phone (optional)</label>
+                <input id="regPhone" placeholder="98765…" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input id="regPass" type="password" placeholder="Minimum 4 characters" />
+            </div>
+            <button class="btn primary" id="btnRegister">Create account</button>
+            <div class="msg" id="regMsg" style="display:none;"></div>
+          </div>
+
+          <!-- WORKER PROFILE -->
+          <div class="panel" id="panel-profile" style="display:none;">
+            <div class="muted" style="margin-bottom:10px;">
+              Only for <b>Worker</b> accounts. Create/update your skills and status.
+            </div>
+
+            <div class="field">
+              <label>Skills (comma separated)</label>
+              <input id="wpSkills" placeholder="Plumber, Electrician, Painter…" />
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Experience (years)</label>
+                <input id="wpExp" type="number" min="0" value="0" />
+              </div>
+              <div class="field">
+                <label>Location</label>
+                <input id="wpLoc" placeholder="Vizag / Gajuwaka / MVP…" />
+              </div>
+            </div>
+
+            <button class="btn primary" id="btnSaveProfile">Save profile</button>
+
+            <div class="hr"></div>
+
+            <div class="field">
+              <label>Availability status</label>
+              <select id="wpStatus">
+                <option value="pending">Pending</option>
+                <option value="ready">Ready</option>
+                <option value="busy">Busy</option>
+              </select>
+            </div>
+            <button class="btn" id="btnSetStatus">Update status</button>
+
+            <div class="msg" id="wpMsg" style="display:none;"></div>
+          </div>
+
+          <!-- OWNER PANEL -->
+          <div class="panel" id="panel-owner" style="display:none;">
+            <div class="muted" style="margin-bottom:10px;">
+              Only for <b>Owner</b> accounts. Create businesses and approve worker requests.
+            </div>
+
+            <div class="field">
+              <label>Business name</label>
+              <input id="bizName" placeholder="e.g., Sri Lakshmi Constructions" />
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Category</label>
+                <input id="bizCat" placeholder="Construction / Hotel / Retail…" />
+              </div>
+              <div class="field">
+                <label>Location</label>
+                <input id="bizLoc" placeholder="Vizag" />
+              </div>
+            </div>
+            <button class="btn primary" id="btnCreateBiz">Create business</button>
+
+            <div class="hr"></div>
+
+            <button class="btn" id="btnLoadRequests">Load pending requests</button>
+            <div class="msg" id="ownerMsg" style="display:none;"></div>
+
+            <div class="hr"></div>
+            <div class="list" id="requestList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Browse -->
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>Browse</h2>
+            <p>See businesses and workers. Workers can request to join a business.</p>
+          </div>
+          <div class="badge brand" id="countBadge">0 items</div>
+        </div>
+
+        <div class="bd">
+          <div class="row">
+            <button class="btn primary" id="btnBusinesses">Businesses</button>
+            <button class="btn" id="btnWorkers">Workers</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- Filters -->
+          <div class="row" style="align-items:flex-end;">
+            <div class="field" style="margin:0;">
+              <label>Business filter (for workers)</label>
+              <select id="filterBusiness">
+                <option value="">All businesses</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0;">
+              <label>Status filter</label>
               <select id="filterStatus">
                 <option value="">All</option>
                 <option value="ready">Ready</option>
@@ -187,502 +398,422 @@
                 <option value="pending">Pending</option>
               </select>
             </div>
-            <div class="field" style="min-width:160px">
-              <label>&nbsp;</label>
-              <button class="btn primary" id="btnLoadWorkers">Load Workers</button>
-            </div>
           </div>
 
-          <div class="sep"></div>
-
-          <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Businesses</h3>
-          <table class="table" id="tblBusinesses">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Location</th>
-                <th>Owner</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-
-          <div class="sep"></div>
-
-          <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Workers</h3>
-          <table class="table" id="tblWorkers">
-            <thead>
-              <tr>
-                <th>Worker</th>
-                <th>Skills</th>
-                <th>Status</th>
-                <th>Rating</th>
-                <th>Contact</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-
-          <div class="help">Backend API: <span class="muted">http://127.0.0.1:5001</span> • Postgres Port: <span class="muted">5433</span></div>
-        </div>
-      </div>
-
-      <!-- RIGHT: Auth + Role Panels -->
-      <div class="card">
-        <div class="hd">
-          <h2>Account</h2>
-          <span class="tag" id="roleTag"><span class="dot pending"></span> Guest</span>
-        </div>
-
-        <div class="bd">
-          <!-- LOGIN -->
-          <div id="loginBox">
-            <div class="row">
-              <div class="field">
-                <label>Email</label>
-                <input id="loginEmail" placeholder="admin@workhub.local" />
-              </div>
-              <div class="field">
-                <label>Password</label>
-                <input id="loginPass" type="password" placeholder="••••" />
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn primary" id="btnLogin">Login</button>
-              <button class="btn" id="btnFillAdmin">Use Admin</button>
-            </div>
-            <div class="msg" id="loginMsg"></div>
-
-            <div class="sep"></div>
-
-            <!-- REGISTER -->
-            <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Create account</h3>
-            <div class="row">
-              <div class="field">
-                <label>Role</label>
-                <select id="regRole">
-                  <option value="owner">Business Owner</option>
-                  <option value="worker">Worker</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Name</label>
-                <input id="regName" placeholder="Your name" />
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <div class="field">
-                <label>Phone</label>
-                <input id="regPhone" placeholder="Optional" />
-              </div>
-              <div class="field">
-                <label>Email</label>
-                <input id="regEmail" placeholder="you@email.com" />
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <div class="field">
-                <label>Password</label>
-                <input id="regPass" type="password" placeholder="min 4 chars" />
-              </div>
-              <div class="field" style="min-width:160px">
-                <label>&nbsp;</label>
-                <button class="btn ok" id="btnRegister">Register</button>
-              </div>
-            </div>
-            <div class="msg" id="regMsg"></div>
-          </div>
-
-          <!-- OWNER PANEL -->
-          <div id="ownerPanel" style="display:none">
-            <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Business Owner</h3>
-
-            <div class="row">
-              <div class="field">
-                <label>Business name</label>
-                <input id="bizName" placeholder="Example: Pragna Constructions" />
-              </div>
-              <div class="field">
-                <label>Category</label>
-                <input id="bizCategory" placeholder="Construction / Hotel / Retail..." />
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <div class="field">
-                <label>Location</label>
-                <input id="bizLocation" placeholder="Visakhapatnam" />
-              </div>
-              <div class="field" style="min-width:160px">
-                <label>&nbsp;</label>
-                <button class="btn ok" id="btnCreateBiz">Create Business</button>
-              </div>
-            </div>
-            <div class="msg" id="ownerMsg"></div>
-
-            <div class="sep"></div>
-
-            <div class="row" style="align-items:center;justify-content:space-between">
-              <h3 style="margin:0;font-size:13px;color:var(--muted);font-weight:600">Pending worker requests</h3>
-              <button class="btn" id="btnLoadPending">Load</button>
-            </div>
-
-            <table class="table" id="tblPending">
-              <thead>
-                <tr>
-                  <th>Business</th>
-                  <th>Worker</th>
-                  <th>Contact</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-
-          <!-- WORKER PANEL -->
-          <div id="workerPanel" style="display:none">
-            <h3 style="margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600">Worker</h3>
-
-            <div class="row">
-              <div class="field">
-                <label>Skills</label>
-                <input id="wSkills" placeholder="Plumbing, Electrician, Mason..." />
-              </div>
-              <div class="field">
-                <label>Experience (years)</label>
-                <input id="wExp" type="number" min="0" value="0" />
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:10px">
-              <div class="field">
-                <label>Location</label>
-                <input id="wLoc" placeholder="Visakhapatnam" />
-              </div>
-              <div class="field" style="min-width:160px">
-                <label>&nbsp;</label>
-                <button class="btn ok" id="btnSaveProfile">Save Profile</button>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:10px">
-              <div class="field">
-                <label>Status</label>
-                <select id="wStatus">
-                  <option value="pending">Pending</option>
-                  <option value="ready">Ready</option>
-                  <option value="busy">Busy</option>
-                </select>
-              </div>
-              <div class="field" style="min-width:160px">
-                <label>&nbsp;</label>
-                <button class="btn primary" id="btnSetStatus">Update Status</button>
-              </div>
-            </div>
-
-            <div class="sep"></div>
-
-            <div class="row">
-              <div class="field">
-                <label>Register under a business</label>
-                <select id="wBusiness"></select>
-              </div>
-              <div class="field" style="min-width:160px">
-                <label>&nbsp;</label>
-                <button class="btn" id="btnReqBiz">Request</button>
-              </div>
-            </div>
-
-            <div class="msg" id="workerMsg"></div>
-          </div>
-
-          <!-- ADMIN NOTE (for now admin is read-only in UI) -->
-          <div id="adminNote" style="display:none">
-            <div class="sep"></div>
-            <div class="tag"><span class="dot ready"></span> Admin logged in</div>
-            <div class="help">Admin APIs can be added next (approve workers globally, manage all businesses). Keeping it simple for now.</div>
-          </div>
-
+          <div class="hr"></div>
+          <div class="list" id="list"></div>
         </div>
       </div>
     </div>
   </div>
 
-<script>
-  const API = "http://127.0.0.1:5000";
-
-  const $ = (id) => document.getElementById(id);
-
-  const state = {
-    user: JSON.parse(localStorage.getItem("workhub_user") || "null"),
-    businesses: [],
-    workers: []
-  };
-
-  function setMsg(id, text, ok=true){
-    const el = $(id);
-    el.textContent = text || "";
-    el.className = "msg " + (ok ? "ok" : "bad");
-  }
-
-  function setRoleUI(){
-    const pill = $("pill");
-    const roleTag = $("roleTag");
-    const btnLogout = $("btnLogout");
-
-    $("loginBox").style.display = state.user ? "none" : "block";
-    $("ownerPanel").style.display = (state.user?.role === "owner") ? "block" : "none";
-    $("workerPanel").style.display = (state.user?.role === "worker") ? "block" : "none";
-    $("adminNote").style.display = (state.user?.role === "admin") ? "block" : "none";
-
-    if(!state.user){
-      pill.textContent = "Not logged in";
-      roleTag.innerHTML = `<span class="dot pending"></span> Guest`;
-      btnLogout.style.display = "none";
-      return;
-    }
-
-    btnLogout.style.display = "inline-block";
-    pill.textContent = `${state.user.name} • ${state.user.role.toUpperCase()}`;
-
-    const dotClass = state.user.role === "worker" ? "busy" : state.user.role === "owner" ? "ready" : "pending";
-    roleTag.innerHTML = `<span class="dot ${dotClass}"></span> ${state.user.role.toUpperCase()}`;
-  }
-
-  async function api(path, method="GET", body=null){
-    const opts = { method, headers: { "Content-Type": "application/json" } };
-    if(body) opts.body = JSON.stringify(body);
-    const res = await fetch(API + path, opts);
-    const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
-    if(!res.ok) throw new Error(data.error || "Request failed");
-    return data;
-  }
-
-  async function loadBusinesses(){
-    const data = await api("/api/businesses");
-    state.businesses = data.items || [];
-    $("kpiBusinesses").textContent = state.businesses.length;
-
-    // table
-    const tb = $("tblBusinesses").querySelector("tbody");
-    tb.innerHTML = state.businesses.map(b => `
-      <tr>
-        <td><b>${escapeHtml(b.name)}</b></td>
-        <td>${escapeHtml(b.category || "-")}</td>
-        <td>${escapeHtml(b.location || "-")}</td>
-        <td class="muted">${escapeHtml(b.owner_name || "-")}</td>
-      </tr>
-    `).join("");
-
-    // filter dropdowns
-    const opt = [`<option value="">All businesses</option>`].concat(
-      state.businesses.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`)
-    ).join("");
-
-    $("filterBusiness").innerHTML = opt;
-    $("wBusiness").innerHTML = state.businesses.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
-  }
-
-  async function loadWorkers(){
-    const status = $("filterStatus").value;
-    const businessId = $("filterBusiness").value;
-
-    const qs = new URLSearchParams();
-    if(status) qs.set("status", status);
-    if(businessId) qs.set("business_id", businessId);
-
-    const data = await api("/api/workers" + (qs.toString() ? `?${qs}` : ""));
-    state.workers = data.items || [];
-
-    $("kpiWorkers").textContent = state.workers.length;
-    $("kpiReady").textContent = state.workers.filter(w => w.status === "ready").length;
-
-    const tb = $("tblWorkers").querySelector("tbody");
-    tb.innerHTML = state.workers.map(w => `
-      <tr>
-        <td>
-          <b>${escapeHtml(w.name)}</b><br/>
-          <span class="muted">${escapeHtml(w.location || "")}</span>
-        </td>
-        <td>${escapeHtml(w.skills || "-")}<br/><span class="muted">${escapeHtml(String(w.experience_years||0))} yrs</span></td>
-        <td>${statusTag(w.status)}</td>
-        <td><b>${escapeHtml(String(w.avg_rating||0))}</b> <span class="muted">(${escapeHtml(String(w.rating_count||0))})</span></td>
-        <td class="muted">${escapeHtml(w.phone || "-")}<br/>${escapeHtml(w.email || "")}</td>
-      </tr>
-    `).join("");
-  }
-
-  function statusTag(status){
-    const cls = status === "ready" ? "ready" : status === "busy" ? "busy" : "pending";
-    const label = status ? status.toUpperCase() : "UNKNOWN";
-    return `<span class="tag"><span class="dot ${cls}"></span>${label}</span>`;
-  }
-
-  function escapeHtml(s){
-    return String(s ?? "").replace(/[&<>"']/g, (m)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[m]));
-  }
-
-  // ------- Auth Handlers -------
-  $("btnFillAdmin").onclick = () => {
-    $("loginEmail").value = "admin@workhub.local";
-    $("loginPass").value = "admin123";
-  };
-
-  $("btnLogin").onclick = async () => {
-    setMsg("loginMsg","",true);
-    try{
-      const email = $("loginEmail").value.trim();
-      const password = $("loginPass").value;
-      const data = await api("/api/login","POST",{email,password});
-      state.user = data.user;
-      localStorage.setItem("workhub_user", JSON.stringify(state.user));
-      setRoleUI();
-      setMsg("loginMsg","Logged in successfully ✅",true);
-      await refreshAll();
-    }catch(e){
-      setMsg("loginMsg", e.message, false);
-    }
-  };
-
-  $("btnRegister").onclick = async () => {
-    setMsg("regMsg","",true);
-    try{
-      const role = $("regRole").value;
-      const name = $("regName").value.trim();
-      const phone = $("regPhone").value.trim();
-      const email = $("regEmail").value.trim();
-      const password = $("regPass").value;
-      await api("/api/register","POST",{role,name,phone,email,password});
-      setMsg("regMsg","Account created ✅ Now login.",true);
-    }catch(e){
-      setMsg("regMsg", e.message, false);
-    }
-  };
-
-  $("btnLogout").onclick = () => {
-    state.user = null;
-    localStorage.removeItem("workhub_user");
-    setRoleUI();
-  };
-
-  // ------- Owner -------
-  $("btnCreateBiz").onclick = async () => {
-    setMsg("ownerMsg","",true);
-    try{
-      const name = $("bizName").value.trim();
-      const category = $("bizCategory").value.trim();
-      const location = $("bizLocation").value.trim();
-      const owner_id = state.user.id;
-      await api("/api/owner/businesses","POST",{owner_id,name,category,location});
-      setMsg("ownerMsg","Business created ✅",true);
-      $("bizName").value = "";
-      $("bizCategory").value = "";
-      $("bizLocation").value = "";
-      await refreshAll();
-    }catch(e){
-      setMsg("ownerMsg", e.message, false);
-    }
-  };
-
-  $("btnLoadPending").onclick = async () => {
-    await loadPending();
-  };
-
-  async function loadPending(){
-    const tb = $("tblPending").querySelector("tbody");
-    tb.innerHTML = "";
-    try{
-      const data = await api(`/api/owner/pending_requests?owner_id=${encodeURIComponent(state.user.id)}`);
-      const items = data.items || [];
-      tb.innerHTML = items.map(r => `
-        <tr>
-          <td><b>${escapeHtml(r.business_name)}</b></td>
-          <td>${escapeHtml(r.worker_name)}</td>
-          <td class="muted">${escapeHtml(r.phone||"-")}<br/>${escapeHtml(r.email||"")}</td>
-          <td>
-            <button class="btn ok" data-approve="${r.request_id}">Approve</button>
-          </td>
-        </tr>
-      `).join("");
-
-      tb.querySelectorAll("[data-approve]").forEach(btn=>{
-        btn.addEventListener("click", async ()=>{
-          const request_id = btn.getAttribute("data-approve");
-          await api("/api/owner/approve_request","POST",{owner_id: state.user.id, request_id});
-          await loadPending();
-          await loadWorkers();
+  <script>
+    // ====== API helper ======
+    const api = (path, opts={}) =>
+      fetch(path, { headers: { "Content-Type": "application/json" }, ...opts })
+        .then(async r => {
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(data.error || ("Request failed: " + r.status));
+          return data;
         });
+
+    const el = id => document.getElementById(id);
+
+    // ====== State ======
+    const state = {
+      user: null,
+      view: "businesses", // businesses | workers
+      businesses: [],
+    };
+
+    function setMsg(target, text, type="") {
+      const box = el(target);
+      box.style.display = "block";
+      box.className = "msg " + (type || "");
+      box.textContent = text;
+    }
+    function hideMsg(target){
+      const box = el(target);
+      box.style.display = "none";
+      box.textContent = "";
+      box.className = "msg";
+    }
+
+    function roleName(role){
+      if (role === "admin") return "Admin";
+      if (role === "owner") return "Owner";
+      if (role === "worker") return "Worker";
+      return role;
+    }
+
+    function updateTop() {
+      el("btnLogout").disabled = !state.user;
+      el("whoPill").textContent = state.user
+        ? `${roleName(state.user.role)} • ${state.user.name} (id:${state.user.id})`
+        : "Not logged in";
+    }
+
+    // ====== Tabs ======
+    function showTab(key){
+      document.querySelectorAll(".tab").forEach(t => {
+        t.classList.toggle("active", t.dataset.tab === key);
+      });
+      ["login","register","profile","owner"].forEach(k => {
+        el("panel-"+k).style.display = (k === key) ? "block" : "none";
+      });
+    }
+    document.querySelectorAll(".tab").forEach(t => {
+      t.addEventListener("click", () => showTab(t.dataset.tab));
+    });
+
+    // ====== Health ======
+    async function checkHealth(){
+      try{
+        await api("/api/health");
+        el("healthPill").textContent = "API: OK";
+      }catch(e){
+        el("healthPill").textContent = "API: DOWN";
+      }
+    }
+
+    // ====== Auth ======
+    el("btnLogin").addEventListener("click", async () => {
+      hideMsg("loginMsg");
+      try{
+        const email = el("loginEmail").value.trim();
+        const password = el("loginPass").value;
+        const data = await api("/api/login", {
+          method:"POST",
+          body: JSON.stringify({ email, password })
+        });
+        state.user = data.user;
+        setMsg("loginMsg", "Logged in successfully.", "ok");
+        updateTop();
+        // default tab by role
+        if (state.user.role === "owner") showTab("owner");
+        else if (state.user.role === "worker") showTab("profile");
+        else showTab("login");
+        await refreshAll();
+      }catch(e){
+        setMsg("loginMsg", e.message, "bad");
+      }
+    });
+
+    el("btnRegister").addEventListener("click", async () => {
+      hideMsg("regMsg");
+      try{
+        const role = el("regRole").value;
+        const name = el("regName").value.trim();
+        const email = el("regEmail").value.trim();
+        const phone = el("regPhone").value.trim();
+        const password = el("regPass").value;
+
+        const data = await api("/api/register", {
+          method:"POST",
+          body: JSON.stringify({ role, name, email, phone, password })
+        });
+
+        setMsg("regMsg", `Account created for ${data.user.name}. Now login.`, "ok");
+      }catch(e){
+        setMsg("regMsg", e.message, "bad");
+      }
+    });
+
+    el("btnLogout").addEventListener("click", () => {
+      state.user = null;
+      updateTop();
+      showTab("login");
+      refreshAll();
+    });
+
+    // ====== Worker profile ======
+    el("btnSaveProfile").addEventListener("click", async () => {
+      hideMsg("wpMsg");
+      try{
+        if (!state.user || state.user.role !== "worker") throw new Error("Login as a Worker first.");
+        const skills = el("wpSkills").value.trim();
+        const experience_years = Number(el("wpExp").value || 0);
+        const location = el("wpLoc").value.trim();
+
+        await api("/api/worker/profile", {
+          method:"POST",
+          body: JSON.stringify({ user_id: state.user.id, skills, experience_years, location })
+        });
+
+        setMsg("wpMsg", "Profile saved.", "ok");
+        await refreshWorkers();
+      }catch(e){
+        setMsg("wpMsg", e.message, "bad");
+      }
+    });
+
+    el("btnSetStatus").addEventListener("click", async () => {
+      hideMsg("wpMsg");
+      try{
+        if (!state.user || state.user.role !== "worker") throw new Error("Login as a Worker first.");
+        const status = el("wpStatus").value;
+        await api("/api/worker/status", {
+          method:"POST",
+          body: JSON.stringify({ user_id: state.user.id, status })
+        });
+        setMsg("wpMsg", "Status updated.", "ok");
+        await refreshWorkers();
+      }catch(e){
+        setMsg("wpMsg", e.message, "bad");
+      }
+    });
+
+    // ====== Owner panel ======
+    el("btnCreateBiz").addEventListener("click", async () => {
+      hideMsg("ownerMsg");
+      try{
+        if (!state.user || state.user.role !== "owner") throw new Error("Login as an Owner first.");
+        const name = el("bizName").value.trim();
+        const category = el("bizCat").value.trim();
+        const location = el("bizLoc").value.trim();
+
+        const data = await api("/api/owner/businesses", {
+          method:"POST",
+          body: JSON.stringify({ owner_id: state.user.id, name, category, location })
+        });
+
+        setMsg("ownerMsg", `Business created: ${data.business.name}`, "ok");
+        el("bizName").value = "";
+        await refreshBusinesses();
+        if (state.view === "businesses") renderBusinesses();
+      }catch(e){
+        setMsg("ownerMsg", e.message, "bad");
+      }
+    });
+
+    el("btnLoadRequests").addEventListener("click", async () => {
+      hideMsg("ownerMsg");
+      try{
+        if (!state.user || state.user.role !== "owner") throw new Error("Login as an Owner first.");
+        const data = await api(`/api/owner/pending_requests?owner_id=${state.user.id}`);
+        renderRequests(data.items || []);
+        setMsg("ownerMsg", `Loaded ${data.items.length} pending request(s).`, "ok");
+      }catch(e){
+        setMsg("ownerMsg", e.message, "bad");
+      }
+    });
+
+    function renderRequests(items){
+      const box = el("requestList");
+      box.innerHTML = "";
+      if (!items.length){
+        box.innerHTML = `<div class="muted">No pending requests.</div>`;
+        return;
+      }
+      items.forEach(it => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div>
+            <h3>${it.worker_name} <span class="badge warn">Pending</span></h3>
+            <p>
+              Business: <b>${it.business_name}</b><br/>
+              Email: ${it.email || "-"} • Phone: ${it.phone || "-"}
+            </p>
+          </div>
+          <div class="actions">
+            <button class="btn primary" data-approve="${it.request_id}">Approve</button>
+          </div>
+        `;
+        box.appendChild(div);
       });
 
-    }catch(e){
-      tb.innerHTML = `<tr><td colspan="4" class="muted">${escapeHtml(e.message)}</td></tr>`;
+      box.querySelectorAll("[data-approve]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          try{
+            btn.disabled = true;
+            const request_id = Number(btn.dataset.approve);
+            await api("/api/owner/approve_request", {
+              method:"POST",
+              body: JSON.stringify({ owner_id: state.user.id, request_id })
+            });
+            setMsg("ownerMsg", "Request approved.", "ok");
+            // refresh list
+            const data = await api(`/api/owner/pending_requests?owner_id=${state.user.id}`);
+            renderRequests(data.items || []);
+          }catch(e){
+            setMsg("ownerMsg", e.message, "bad");
+          }finally{
+            btn.disabled = false;
+          }
+        });
+      });
     }
-  }
 
-  // ------- Worker -------
-  $("btnSaveProfile").onclick = async () => {
-    setMsg("workerMsg","",true);
-    try{
-      const user_id = state.user.id;
-      const skills = $("wSkills").value.trim();
-      const experience_years = parseInt($("wExp").value || "0", 10);
-      const location = $("wLoc").value.trim();
-      await api("/api/worker/profile","POST",{user_id,skills,experience_years,location});
-      setMsg("workerMsg","Profile saved ✅",true);
-      await loadWorkers();
-    }catch(e){
-      setMsg("workerMsg", e.message, false);
+    // ====== Browse view buttons ======
+    el("btnBusinesses").addEventListener("click", async () => {
+      state.view = "businesses";
+      await refreshBusinesses();
+      renderBusinesses();
+    });
+    el("btnWorkers").addEventListener("click", async () => {
+      state.view = "workers";
+      await refreshWorkers();
+    });
+
+    el("btnRefresh").addEventListener("click", refreshAll);
+
+    // ====== Filters ======
+    el("filterBusiness").addEventListener("change", () => {
+      if (state.view === "workers") refreshWorkers();
+    });
+    el("filterStatus").addEventListener("change", () => {
+      if (state.view === "workers") refreshWorkers();
+    });
+
+    // ====== Render Businesses ======
+    async function refreshBusinesses(){
+      const data = await api("/api/businesses");
+      state.businesses = data.items || [];
+      // update business dropdown
+      const sel = el("filterBusiness");
+      const keep = sel.value;
+      sel.innerHTML = `<option value="">All businesses</option>` + state.businesses.map(b =>
+        `<option value="${b.id}">${escapeHtml(b.name)} • ${escapeHtml(b.location || "—")}</option>`
+      ).join("");
+      sel.value = keep || "";
     }
-  };
 
-  $("btnSetStatus").onclick = async () => {
-    setMsg("workerMsg","",true);
-    try{
-      const user_id = state.user.id;
-      const status = $("wStatus").value;
-      await api("/api/worker/status","POST",{user_id,status});
-      setMsg("workerMsg","Status updated ✅",true);
-      await loadWorkers();
-    }catch(e){
-      setMsg("workerMsg", e.message, false);
+    function renderBusinesses(){
+      const box = el("list");
+      box.innerHTML = "";
+      const items = state.businesses;
+
+      el("countBadge").textContent = `${items.length} businesses`;
+
+      if (!items.length){
+        box.innerHTML = `<div class="muted">No businesses yet. Create one as an Owner.</div>`;
+        return;
+      }
+
+      items.forEach(b => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div>
+            <h3>${escapeHtml(b.name)}</h3>
+            <p>
+              Category: ${escapeHtml(b.category || "—")}<br/>
+              Location: ${escapeHtml(b.location || "—")}<br/>
+              Owner: ${escapeHtml(b.owner_name || "—")}
+            </p>
+          </div>
+          <div class="actions">
+            ${state.user && state.user.role === "worker"
+              ? `<button class="btn primary" data-join="${b.id}">Request to Join</button>`
+              : `<span class="badge brand">Business</span>`
+            }
+          </div>
+        `;
+        box.appendChild(div);
+      });
+
+      box.querySelectorAll("[data-join]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          try{
+            if (!state.user || state.user.role !== "worker") throw new Error("Login as a Worker first.");
+            btn.disabled = true;
+            const business_id = Number(btn.dataset.join);
+            await api("/api/worker/register_business", {
+              method:"POST",
+              body: JSON.stringify({ worker_user_id: state.user.id, business_id })
+            });
+            alert("Request sent to owner for approval.");
+          }catch(e){
+            alert(e.message);
+          }finally{
+            btn.disabled = false;
+          }
+        });
+      });
     }
-  };
 
-  $("btnReqBiz").onclick = async () => {
-    setMsg("workerMsg","",true);
-    try{
-      const worker_user_id = state.user.id;
-      const business_id = $("wBusiness").value;
-      await api("/api/worker/register_business","POST",{worker_user_id,business_id});
-      setMsg("workerMsg","Request sent ✅ (Owner must approve)",true);
-    }catch(e){
-      setMsg("workerMsg", e.message, false);
+    // ====== Render Workers ======
+    async function refreshWorkers(){
+      const box = el("list");
+      box.innerHTML = `<div class="muted">Loading workers…</div>`;
+
+      const status = el("filterStatus").value;
+      const business_id = el("filterBusiness").value;
+
+      const qs = new URLSearchParams();
+      if (status) qs.set("status", status);
+      if (business_id) qs.set("business_id", business_id);
+
+      try{
+        const data = await api(`/api/workers?${qs.toString()}`);
+        const items = data.items || [];
+        el("countBadge").textContent = `${items.length} workers`;
+        renderWorkers(items);
+      }catch(e){
+        box.innerHTML = `<div class="msg bad">${escapeHtml(e.message)}</div>`;
+      }
     }
-  };
 
-  // ------- Public -------
-  $("btnLoadWorkers").onclick = async () => { await loadWorkers(); };
-  $("btnRefresh").onclick = async () => { await refreshAll(); };
-
-  async function refreshAll(){
-    try{
-      await loadBusinesses();
-      await loadWorkers();
-      if(state.user?.role === "owner") await loadPending();
-    }catch(e){
-      // ignore
+    function statusBadge(s){
+      if (s === "ready") return `<span class="badge ok">Ready</span>`;
+      if (s === "busy") return `<span class="badge bad">Busy</span>`;
+      return `<span class="badge warn">Pending</span>`;
     }
-  }
 
-  // init
-  (async function(){
-    setRoleUI();
-    $("filterBusiness").innerHTML = `<option value="">All businesses</option>`;
-    await refreshAll();
-  })();
-</script>
+    function renderWorkers(items){
+      const box = el("list");
+      box.innerHTML = "";
+
+      if (!items.length){
+        box.innerHTML = `<div class="muted">No workers found for current filters.</div>`;
+        return;
+      }
+
+      items.forEach(w => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div>
+            <h3>${escapeHtml(w.name)} ${statusBadge(w.status)}</h3>
+            <p>
+              Skills: ${escapeHtml(w.skills || "—")}<br/>
+              Exp: ${escapeHtml(String(w.experience_years ?? 0))} yrs • Location: ${escapeHtml(w.location || "—")}<br/>
+              Rating: <b>${escapeHtml(String(w.avg_rating))}</b> (${escapeHtml(String(w.rating_count))})
+            </p>
+          </div>
+          <div class="actions">
+            <span class="badge">📞 ${escapeHtml(w.phone || "—")}</span>
+            <span class="badge">✉️ ${escapeHtml(w.email || "—")}</span>
+          </div>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    // ====== Utils ======
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    async function refreshAll(){
+      await checkHealth();
+      await refreshBusinesses();
+      if (state.view === "businesses") renderBusinesses();
+      else await refreshWorkers();
+      updateTop();
+    }
+
+    // ====== Boot ======
+    (async function init(){
+      await refreshAll();
+      state.view = "businesses";
+    })();
+  </script>
 </body>
 </html>
