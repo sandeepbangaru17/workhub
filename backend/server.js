@@ -75,6 +75,37 @@ async function ensureAdmin() {
   );
 }
 
+// ---- API: Add rating ----
+app.post("/api/ratings", async (req, res) => {
+  try {
+    const { worker_user_id, rater_user_id, rating, review } = req.body || {};
+
+    if (!worker_user_id) return bad(res, "worker_user_id required");
+    if (!rater_user_id) return bad(res, "rater_user_id required");
+    const r = Number(rating);
+    if (!Number.isFinite(r) || r < 1 || r > 5) return bad(res, "rating must be 1 to 5");
+
+    // worker must exist and be a worker
+    const worker = await pool.query("SELECT id, role FROM users WHERE id=$1", [worker_user_id]);
+    if (!worker.rows.length || worker.rows[0].role !== "worker") return bad(res, "Invalid worker_user_id");
+
+    // rater must exist
+    const rater = await pool.query("SELECT id FROM users WHERE id=$1", [rater_user_id]);
+    if (!rater.rows.length) return bad(res, "Invalid rater_user_id");
+
+    await pool.query(
+      `INSERT INTO ratings (worker_user_id, rater_user_id, rating, review)
+       VALUES ($1,$2,$3,$4)`,
+      [worker_user_id, rater_user_id, r, (review || "").trim()]
+    );
+
+    ok(res, { ok: true });
+  } catch (e) {
+    bad(res, e.message, 500);
+  }
+});
+
+
 // ---- API: Register ----
 app.post("/api/register", async (req, res) => {
   try {
