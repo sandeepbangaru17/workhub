@@ -9,7 +9,7 @@ require("dotenv").config();
 
 const app = express();
 
-const PORT = Number(process.env.PORT || 5000);
+const PORT = Number(process.env.PORT || 5001);
 const SESSION_SECRET = process.env.SESSION_SECRET || "dev_secret_change_me";
 
 const pool = new Pool({
@@ -24,7 +24,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
 /* =========================
-   Simple session (cookie)
+   DB Schema
    ========================= */
 async function ensureSchema() {
   await pool.query(`
@@ -48,9 +48,9 @@ async function ensureSchema() {
 
     CREATE TABLE IF NOT EXISTS worker_profiles (
       user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-      skills TEXT,
-      experience TEXT,
-      location TEXT,
+      skills TEXT DEFAULT '',
+      experience TEXT DEFAULT '',
+      location TEXT DEFAULT '',
       status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','ready','busy')),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
@@ -66,12 +66,12 @@ async function ensureSchema() {
   `);
 }
 
+/* =========================
+   Cookie Session (Signed)
+   ========================= */
 function signSession(payloadObj) {
   const payload = Buffer.from(JSON.stringify(payloadObj)).toString("base64url");
-  const sig = crypto
-    .createHmac("sha256", SESSION_SECRET)
-    .update(payload)
-    .digest("base64url");
+  const sig = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
   return `${payload}.${sig}`;
 }
 
@@ -80,11 +80,7 @@ function verifySession(token) {
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;
 
-  const expected = crypto
-    .createHmac("sha256", SESSION_SECRET)
-    .update(payload)
-    .digest("base64url");
-
+  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
   if (expected !== sig) return null;
 
   try {
@@ -99,8 +95,8 @@ function setSessionCookie(res, sessionObj) {
   res.cookie("wh_session", token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: false, // set true only if using https
-    maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+    secure: false,
+    maxAge: 1000 * 60 * 60 * 24 * 7
   });
 }
 
@@ -120,28 +116,18 @@ async function getUserFromSession(req) {
   return rows[0] || null;
 }
 
-function requireAuth() {
-  return async (req, res, next) => {
-    try {
-      const user = await getUserFromSession(req);
-      if (!user) return res.status(401).json({ error: "Not logged in" });
-      req.user = user;
-      next();
-    } catch (e) {
-      res.status(500).json({ error: "Server error" });
-    }
-  };
-}
-
 function requireRole(...roles) {
   return async (req, res, next) => {
     try {
       const user = await getUserFromSession(req);
       if (!user) return res.status(401).json({ error: "Not logged in" });
-      if (!roles.includes(user.role)) return res.status(403).json({ error: "Forbidden" });
+      if (roles.length && !roles.includes(user.role)) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
       req.user = user;
       next();
     } catch (e) {
+      console.error(e);
       res.status(500).json({ error: "Server error" });
     }
   };
@@ -152,7 +138,7 @@ function requireRole(...roles) {
    ========================= */
 async function ensureAdminSeed() {
   const adminEmail = "admin@workhub.local";
-  const adminPass = "admin123"; // you can change later
+  const adminPass = "admin123";
   const { rows } = await pool.query("SELECT id FROM users WHERE email=$1", [adminEmail]);
   if (rows.length) return;
 
@@ -167,17 +153,16 @@ async function ensureAdminSeed() {
 /* =========================
    API
    ========================= */
-
 app.get("/api/health", async (req, res) => {
   try {
     await pool.query("SELECT 1");
     res.json({ ok: true });
-  } catch (e) {
+  } catch {
     res.status(500).json({ ok: false, error: "DB not reachable" });
   }
 });
 
-app.get("/api/me", requireAuth(), async (req, res) => {
+app.get("/api/me", requireRole("admin", "owner", "worker"), async (req, res) => {
   const user = req.user;
   let worker = null;
 
@@ -208,23 +193,21 @@ app.post("/api/register", async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      "INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,role",
+      "INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id",
       [name, email.toLowerCase(), hash, role]
     );
 
-    // Create empty worker profile if worker
     if (role === "worker") {
       await pool.query(
-        "INSERT INTO worker_profiles (user_id, skills, experience, location, status) VALUES ($1,'','','','pending') ON CONFLICT (user_id) DO NOTHING",
+        "INSERT INTO worker_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING",
         [rows[0].id]
       );
     }
 
     res.json({ ok: true });
   } catch (e) {
-    if (String(e.message).includes("duplicate key")) {
-      return res.status(409).json({ error: "Email already exists" });
-    }
+    if (String(e.message).includes("duplicate key")) return res.status(409).json({ error: "Email already exists" });
+    console.error(e);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -237,6 +220,7 @@ app.post("/api/login", async (req, res) => {
     "SELECT id,name,email,role,password_hash FROM users WHERE email=$1",
     [email.toLowerCase()]
   );
+
   const user = rows[0];
   if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
@@ -244,12 +228,10 @@ app.post("/api/login", async (req, res) => {
   if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
   setSessionCookie(res, { uid: user.id });
-  res.json({ ok: true });
+  res.json({ ok: true, role: user.role, name: user.name });
 });
 
-/* -------------------------
-   Browse endpoints
-   ------------------------- */
+/* Browse */
 app.get("/api/businesses", async (req, res) => {
   const { rows } = await pool.query(
     `SELECT b.id, b.name, b.category, b.location
@@ -260,8 +242,6 @@ app.get("/api/businesses", async (req, res) => {
 });
 
 app.get("/api/workers", async (req, res) => {
-  // Only show workers who are approved in some business (or admin approved)
-  // For simplicity: show all workers + profile, plus business_id from latest approved request (if any)
   const { rows } = await pool.query(`
     SELECT
       u.id AS worker_id,
@@ -285,27 +265,22 @@ app.get("/api/workers", async (req, res) => {
     ORDER BY u.id DESC
   `);
 
-  // Map to what frontend expects
   res.json(rows.map(r => ({
     id: r.worker_id,
     name: r.name,
     email: r.email,
-    skills: r.skills,
-    experience: r.experience,
-    location: r.location,
-    status: r.status,
+    skills: r.skills || "",
+    experience: r.experience || "",
+    location: r.location || "",
+    status: r.status || "pending",
     business_id: r.business_id
   })));
 });
 
-/* -------------------------
-   Worker endpoints
-   ------------------------- */
+/* Worker */
 app.post("/api/worker/profile", requireRole("worker"), async (req, res) => {
   const { skills = "", experience = "", location = "", status = "pending" } = req.body || {};
-  if (!["pending", "ready", "busy"].includes(status)) {
-    return res.status(400).json({ error: "Invalid status" });
-  }
+  if (!["pending", "ready", "busy"].includes(status)) return res.status(400).json({ error: "Invalid status" });
 
   await pool.query(
     `INSERT INTO worker_profiles (user_id, skills, experience, location, status, updated_at)
@@ -329,16 +304,13 @@ app.post("/api/worker/join", requireRole("worker"), async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
-    if (String(e.message).includes("duplicate key")) {
-      return res.status(409).json({ error: "Already requested this business" });
-    }
+    if (String(e.message).includes("duplicate key")) return res.status(409).json({ error: "Already requested" });
+    console.error(e);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-/* -------------------------
-   Owner endpoints
-   ------------------------- */
+/* Owner */
 app.post("/api/owner/businesses", requireRole("owner"), async (req, res) => {
   const { name, category = "", location = "" } = req.body || {};
   if (!name || name.length < 2) return res.status(400).json({ error: "Business name required" });
@@ -376,7 +348,6 @@ app.post("/api/owner/requests/:id/decision", requireRole("owner"), async (req, r
   const { approve } = req.body || {};
   const newStatus = approve ? "approved" : "rejected";
 
-  // Ensure request belongs to owner's business
   const { rows } = await pool.query(`
     SELECT wr.id
     FROM worker_requests wr
@@ -411,36 +382,7 @@ app.get("/api/owner/workers", requireRole("owner"), async (req, res) => {
   res.json(rows);
 });
 
-app.post("/api/owner/workers/:id/status", requireRole("owner"), async (req, res) => {
-  const workerId = Number(req.params.id);
-  const { status } = req.body || {};
-  if (!["pending", "ready", "busy"].includes(status)) return res.status(400).json({ error: "Invalid status" });
-
-  // owner can only update status for approved workers under their businesses
-  const { rows } = await pool.query(`
-    SELECT 1
-    FROM worker_requests wr
-    JOIN businesses b ON b.id = wr.business_id
-    WHERE wr.worker_id=$1 AND wr.status='approved' AND b.owner_id=$2
-    LIMIT 1
-  `, [workerId, req.user.id]);
-
-  if (!rows.length) return res.status(403).json({ error: "Not allowed" });
-
-  await pool.query(
-    `INSERT INTO worker_profiles (user_id, status, updated_at)
-     VALUES ($1,$2,NOW())
-     ON CONFLICT (user_id)
-     DO UPDATE SET status=$2, updated_at=NOW()`,
-    [workerId, status]
-  );
-
-  res.json({ ok: true });
-});
-
-/* -------------------------
-   Admin endpoints
-   ------------------------- */
+/* Admin */
 app.get("/api/admin/businesses", requireRole("admin"), async (req, res) => {
   const { rows } = await pool.query(`
     SELECT
@@ -456,52 +398,16 @@ app.get("/api/admin/businesses", requireRole("admin"), async (req, res) => {
   res.json(rows);
 });
 
-app.get("/api/admin/workers/pending", requireRole("admin"), async (req, res) => {
-  const { rows } = await pool.query(`
-    SELECT u.id, u.name, u.email, wp.skills
-    FROM users u
-    LEFT JOIN worker_profiles wp ON wp.user_id = u.id
-    WHERE u.role='worker'
-    ORDER BY u.id DESC
-  `);
-
-  // "pending" view means: show workers that are still pending in profile status
-  res.json(rows.filter(r => true)); // keep it simple (admin can approve/reject by setting requests; minimal)
-});
-
-app.post("/api/admin/workers/:id/decision", requireRole("admin"), async (req, res) => {
-  const workerId = Number(req.params.id);
-  const { approve } = req.body || {};
-
-  // Simplified admin approval:
-  // If approve=false => set profile status pending (or keep)
-  // If approve=true => set profile status ready (admin-level approval)
-  const newStatus = approve ? "ready" : "pending";
-
-  await pool.query(
-    `INSERT INTO worker_profiles (user_id, status, updated_at)
-     VALUES ($1,$2,NOW())
-     ON CONFLICT (user_id)
-     DO UPDATE SET status=$2, updated_at=NOW()`,
-    [workerId, newStatus]
-  );
-
-  res.json({ ok: true });
-});
-
 /* =========================
-   Serve frontend from backend
+   Serve frontend
    ========================= */
 const FRONTEND_FILE = path.join(__dirname, "..", "frontend", "index.html");
 
 app.get("/", (req, res) => {
-  if (!fs.existsSync(FRONTEND_FILE)) {
-    return res.status(404).send("frontend/index.html not found");
-  }
+  if (!fs.existsSync(FRONTEND_FILE)) return res.status(404).send("frontend/index.html not found");
   res.sendFile(FRONTEND_FILE);
 });
 
-// fallback for reloads (SPA)
 app.get("*", (req, res) => {
   if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Not found" });
   if (!fs.existsSync(FRONTEND_FILE)) return res.status(404).send("frontend/index.html not found");
@@ -515,10 +421,7 @@ app.get("*", (req, res) => {
   try {
     await ensureSchema();
     await ensureAdminSeed();
-
-    app.listen(PORT, () => {
-      console.log(`✅ WorkHub running at http://127.0.0.1:${PORT}`);
-    });
+    app.listen(PORT, () => console.log(`✅ WorkHub running at http://127.0.0.1:${PORT}`));
   } catch (e) {
     console.error("❌ Failed to start:", e.message);
     process.exit(1);
