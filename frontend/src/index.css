@@ -292,6 +292,39 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.workspace-shell {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.workspace-side {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+}
+
+.workspace-side h2 {
+  margin: 0.25rem 0 0.55rem;
+}
+
+.workspace-main {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.workspace-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stack-mini {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.65rem;
+}
+
 .panel {
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -584,6 +617,18 @@ a {
 @media (max-width: 1024px) {
   .hero-grid,
   .dash-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-side {
+    position: static;
+  }
+
+  .workspace-grid {
     grid-template-columns: 1fr;
   }
 

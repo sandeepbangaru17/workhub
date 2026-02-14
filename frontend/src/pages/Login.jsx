@@ -18,7 +18,7 @@ export default function Login() {
     try {
       const data = await api.login(email, password);
       auth.login({ name: data.name, role: data.role, email });
-      nav("/dashboard");
+      nav("/");
     } catch (e2) {
       setErr(e2.message);
     } finally {

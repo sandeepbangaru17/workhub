@@ -24,15 +24,12 @@ export default function Navbar() {
         </Link>
 
         <nav className="nav-links">
-          <NavLink to="/">Home</NavLink>
-          <NavLink to="/businesses">Marketplace</NavLink>
-          <NavLink to="/dashboard">Dashboard</NavLink>
+          {isAuthed && user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
+          {isAuthed && user?.role === "owner" && <NavLink to="/owner">Owner</NavLink>}
+          {isAuthed && user?.role === "worker" && <NavLink to="/worker">Worker</NavLink>}
+          {isAuthed && <NavLink to="/businesses">Marketplace</NavLink>}
           {!isAuthed && !booting && <NavLink to="/login">Login</NavLink>}
-          {!isAuthed && !booting && (
-            <NavLink to="/register" className="pill-link">
-              Register
-            </NavLink>
-          )}
+          {!isAuthed && !booting && <NavLink to="/register" className="pill-link">Register</NavLink>}
         </nav>
 
         {isAuthed && (
