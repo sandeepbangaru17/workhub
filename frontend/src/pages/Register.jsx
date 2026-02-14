@@ -4,7 +4,7 @@ import { api } from "../api";
 
 export default function Register() {
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("worker");
   const [err, setErr] = useState("");
@@ -17,7 +17,7 @@ export default function Register() {
     setErr("");
     setLoading(true);
     try {
-      await api.register(name, phone, password, role);
+      await api.register(name, email, password, role);
       nav("/login");
     } catch (e2) {
       setErr(e2.message);
@@ -46,11 +46,13 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700">Phone</label>
+            <label className="text-sm font-medium text-slate-700">Email</label>
             <input
+              type="email"
               className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-slate-200"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
               required
             />
           </div>

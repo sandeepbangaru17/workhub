@@ -4,7 +4,7 @@ import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 
 export default function Login() {
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,8 +17,8 @@ export default function Login() {
     setErr("");
     setLoading(true);
     try {
-      const data = await api.login(phone, password);
-      auth.login({ token: data.token, user: data.user });
+      const data = await api.login(email, password);
+      auth.login({ name: data.name, role: data.role });
       nav("/businesses");
     } catch (e2) {
       setErr(e2.message);
@@ -37,12 +37,13 @@ export default function Login() {
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="text-sm font-medium text-slate-700">Phone</label>
+            <label className="text-sm font-medium text-slate-700">Email</label>
             <input
               className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-slate-200"
-              placeholder="9999999999"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>

@@ -241,6 +241,42 @@ app.get("/api/businesses", async (req, res) => {
   res.json(rows);
 });
 
+app.get("/api/businesses/:id/workers", async (req, res) => {
+  const businessId = Number(req.params.id);
+  if (!Number.isInteger(businessId) || businessId <= 0) {
+    return res.status(400).json({ error: "Invalid business id" });
+  }
+
+  const { rows } = await pool.query(
+    `SELECT
+      u.id,
+      u.name,
+      u.email,
+      wp.skills,
+      wp.experience,
+      wp.location,
+      wp.status
+     FROM worker_requests wr
+     JOIN users u ON u.id = wr.worker_id
+     LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+     WHERE wr.business_id = $1 AND wr.status = 'approved'
+     ORDER BY u.id DESC`,
+    [businessId]
+  );
+
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      skills: r.skills || "",
+      experience: r.experience || "",
+      location: r.location || "",
+      status: r.status || "pending",
+    }))
+  );
+});
+
 app.get("/api/workers", async (req, res) => {
   const { rows } = await pool.query(`
     SELECT
@@ -396,6 +432,63 @@ app.get("/api/admin/businesses", requireRole("admin"), async (req, res) => {
     ORDER BY b.created_at DESC
   `);
   res.json(rows);
+});
+
+app.get("/api/admin/workers/pending", requireRole("admin"), async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT
+      u.id,
+      u.name,
+      u.email,
+      wp.skills
+    FROM users u
+    LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+    WHERE u.role='worker' AND wp.status='pending'
+    ORDER BY u.created_at DESC
+  `);
+  res.json(rows);
+});
+
+app.post("/api/admin/workers/:id/decision", requireRole("admin"), async (req, res) => {
+  const workerId = Number(req.params.id);
+  const { approve } = req.body;
+
+  if (!workerId) return res.status(400).json({ error: "Invalid worker id" });
+
+  await pool.query(
+    "UPDATE worker_profiles SET status=$1 WHERE user_id=$2",
+    [approve ? "ready" : "pending", workerId]
+  );
+
+  res.json({ ok: true });
+});
+
+app.post("/api/owner/workers/:workerId/status", requireRole("owner"), async (req, res) => {
+  const workerId = Number(req.params.workerId);
+  const { status } = req.body;
+
+  if (!["ready", "busy"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  // Ensure worker belongs to owner's business
+  const { rows } = await pool.query(`
+    SELECT wr.id
+    FROM worker_requests wr
+    JOIN businesses b ON b.id = wr.business_id
+    WHERE wr.worker_id=$1 AND b.owner_id=$2 AND wr.status='approved'
+  `, [workerId, req.user.id]);
+
+  if (!rows.length) {
+    return res.status(403).json({ error: "Not your worker" });
+  }
+
+  await pool.query(
+    "UPDATE worker_profiles SET status=$1 WHERE user_id=$2",
+    [status, workerId]
+  );
+
+  res.json({ ok: true });
 });
 
 /* =========================

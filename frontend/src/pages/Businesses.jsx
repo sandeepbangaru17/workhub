@@ -52,7 +52,7 @@ export default function Businesses() {
                 }}
               >
                 <div style={{ fontWeight: 700 }}>{b.name}</div>
-                <div style={{ opacity: 0.75 }}>{b.city}</div>
+                <div style={{ opacity: 0.75 }}>{b.location || "-"}</div>
                 <div style={{ marginTop: 8, fontSize: 13, opacity: 0.75 }}>View workers →</div>
               </Link>
             ))}

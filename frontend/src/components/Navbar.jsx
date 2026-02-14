@@ -1,8 +1,19 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { api } from "../api";
 
 export default function Navbar() {
-  const { isAuthed, user, logout } = useAuth();
+  const { isAuthed, user, logout: clearAuth } = useAuth();
+
+  const onLogout = async () => {
+    try {
+      await api.logout();
+    } catch {
+      // Clear local auth state even if API logout fails.
+    } finally {
+      clearAuth();
+    }
+  };
 
   return (
     <header className="border-b bg-white">
@@ -31,7 +42,7 @@ export default function Navbar() {
                 {user?.name} ({user?.role})
               </span>
               <button
-                onClick={logout}
+                onClick={onLogout}
                 className="rounded-lg border px-3 py-1.5 font-semibold text-slate-900 hover:bg-slate-50"
               >
                 Logout

@@ -1,12 +1,11 @@
-export const API_URL = "http://localhost:5000";
+const DEFAULT_API_URL = "http://localhost:5001";
+export const API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
 
-async function request(path, { method = "GET", body, token } = {}) {
-  const headers = { "Content-Type": "application/json" };
-  if (token) headers.Authorization = `Bearer ${token}`;
-
+async function request(path, { method = "GET", body } = {}) {
   const res = await fetch(`${API_URL}${path}`, {
     method,
-    headers,
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -16,7 +15,14 @@ async function request(path, { method = "GET", body, token } = {}) {
 }
 
 export const api = {
-  login: (phone, password) => request("/api/auth/login", { method: "POST", body: { phone, password } }),
-  register: (name, phone, password, role) =>
-    request("/api/auth/register", { method: "POST", body: { name, phone, password, role } }),
+  login: (email, password) => request("/api/login", { method: "POST", body: { email, password } }),
+  register: (name, email, password, role) =>
+    request("/api/register", { method: "POST", body: { name, email, password, role } }),
+  logout: () => request("/api/logout", { method: "POST" }),
+  me: () => request("/api/me"),
+  getBusinesses: () => request("/api/businesses"),
+  getBusinessWorkers: (businessId) => request(`/api/businesses/${businessId}/workers`),
 };
+
+export const getBusinesses = api.getBusinesses;
+export const getBusinessWorkers = api.getBusinessWorkers;
