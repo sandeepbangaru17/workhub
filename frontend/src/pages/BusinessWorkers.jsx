@@ -1,65 +1,66 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getBusinessWorkers } from "../api";
+import { api } from "../api";
+import { useLiveRefresh } from "../hooks/useLiveRefresh";
 
 export default function BusinessWorkers() {
   const { id } = useParams();
+  const { version, live } = useLiveRefresh(true);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
-        setErr("");
-        const data = await getBusinessWorkers(id);
+        const data = await api.getBusinessWorkers(id);
         setItems(data);
+        setErr("");
       } catch (e) {
         setErr(e.message);
       } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, version]);
 
   return (
-    <div style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px", fontFamily: "system-ui" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <section className="dash-space">
+      <header className="dash-head">
         <div>
-          <h1 style={{ margin: 0, fontSize: 24 }}>Workers</h1>
-          <p style={{ marginTop: 6, opacity: 0.75 }}>Business ID: {id}</p>
+          <p className="eyebrow">Business Talent Board</p>
+          <h1>Approved Workers</h1>
         </div>
-        <Link to="/businesses" style={{ textDecoration: "none" }}>
-          Back
-        </Link>
-      </div>
+        <div className="cluster">
+          <span className={live ? "badge-live is-on" : "badge-live"}>{live ? "Live" : "Offline"}</span>
+          <Link className="btn btn-ghost" to="/businesses">
+            Back
+          </Link>
+        </div>
+      </header>
 
-      <div style={{ border: "1px solid #eee", borderRadius: 14, padding: 16, marginTop: 16 }}>
-        {loading && <div>Loading...</div>}
-        {err && (
-          <div style={{ background: "#fff2f2", border: "1px solid #ffd0d0", padding: 10, borderRadius: 10, color: "#b00020" }}>
-            {err}
-          </div>
-        )}
-
+      <section className="panel">
+        {loading && <p>Loading workers...</p>}
+        {err && <div className="alert">{err}</div>}
         {!loading && !err && (
-          <div style={{ display: "grid", gap: 12 }}>
+          <div className="tile-grid">
             {items.map((w) => (
-              <div key={w.id} style={{ border: "1px solid #f0f0f0", borderRadius: 12, padding: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                  <div style={{ fontWeight: 700 }}>{w.name}</div>
-                  <span style={{ fontSize: 12, padding: "4px 8px", border: "1px solid #eee", borderRadius: 999 }}>{w.status}</span>
+              <article key={w.id} className="tile">
+                <div className="tile-top">
+                  <h3>{w.name}</h3>
+                  <span className="chip">{w.status}</span>
                 </div>
-                <div style={{ opacity: 0.75, marginTop: 6 }}>Email: {w.email}</div>
-                <div style={{ opacity: 0.75 }}>Experience: {w.experience || "-"}</div>
-                <div style={{ opacity: 0.75 }}>Location: {w.location || "-"}</div>
-                <div style={{ opacity: 0.75 }}>Skills: {w.skills || "-"}</div>
-              </div>
+                <p>{w.email}</p>
+                <small>Experience: {w.experience || "-"}</small>
+                <small>Location: {w.location || "-"}</small>
+                <small>Skills: {w.skills || "-"}</small>
+              </article>
             ))}
-            {items.length === 0 && <div style={{ opacity: 0.75 }}>No approved workers for this business yet.</div>}
+            {items.length === 0 && <p>No approved workers yet.</p>}
           </div>
         )}
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }

@@ -11,6 +11,7 @@ const app = express();
 
 const PORT = Number(process.env.PORT || 5001);
 const SESSION_SECRET = process.env.SESSION_SECRET || "dev_secret_change_me";
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 const pool = new Pool({
   host: process.env.PGHOST,
@@ -18,6 +19,39 @@ const pool = new Pool({
   database: process.env.PGDATABASE,
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD
+});
+
+const liveClients = new Set();
+
+function broadcastLiveEvent(eventName, payload) {
+  const packet = `event: ${eventName}\ndata: ${JSON.stringify(payload)}\n\n`;
+  for (const client of liveClients) {
+    client.write(packet);
+  }
+}
+
+function notifyDataChanged(scope, extra = {}) {
+  broadcastLiveEvent("refresh", {
+    scope,
+    ts: Date.now(),
+    ...extra
+  });
+}
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = new Set([CORS_ORIGIN, "http://127.0.0.1:5173"]);
+
+  if (origin && allowedOrigins.has(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.header("Vary", "Origin");
+  }
+
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
 });
 
 app.use(express.json({ limit: "1mb" }));
@@ -162,6 +196,25 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+app.get("/api/stream", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  liveClients.add(res);
+  res.write(`event: connected\ndata: ${JSON.stringify({ ok: true, ts: Date.now() })}\n\n`);
+
+  const heartbeat = setInterval(() => {
+    res.write(`event: ping\ndata: ${Date.now()}\n\n`);
+  }, 20000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    liveClients.delete(res);
+  });
+});
+
 app.get("/api/me", requireRole("admin", "owner", "worker"), async (req, res) => {
   const user = req.user;
   let worker = null;
@@ -204,6 +257,7 @@ app.post("/api/register", async (req, res) => {
       );
     }
 
+    notifyDataChanged("users", { action: "register", role });
     res.json({ ok: true });
   } catch (e) {
     if (String(e.message).includes("duplicate key")) return res.status(409).json({ error: "Email already exists" });
@@ -239,6 +293,20 @@ app.get("/api/businesses", async (req, res) => {
      ORDER BY b.created_at DESC`
   );
   res.json(rows);
+});
+
+app.get("/api/stats", async (req, res) => {
+  const [businesses, readyWorkers, pendingRequests] = await Promise.all([
+    pool.query("SELECT COUNT(*)::int AS value FROM businesses"),
+    pool.query("SELECT COUNT(*)::int AS value FROM worker_profiles WHERE status='ready'"),
+    pool.query("SELECT COUNT(*)::int AS value FROM worker_requests WHERE status='pending'")
+  ]);
+
+  res.json({
+    businesses: businesses.rows[0].value,
+    ready_workers: readyWorkers.rows[0].value,
+    pending_requests: pendingRequests.rows[0].value
+  });
 });
 
 app.get("/api/businesses/:id/workers", async (req, res) => {
@@ -326,6 +394,7 @@ app.post("/api/worker/profile", requireRole("worker"), async (req, res) => {
     [req.user.id, skills, experience, location, status]
   );
 
+  notifyDataChanged("workers", { action: "profile_update", worker_id: req.user.id, status });
   res.json({ ok: true });
 });
 
@@ -338,12 +407,31 @@ app.post("/api/worker/join", requireRole("worker"), async (req, res) => {
       "INSERT INTO worker_requests (worker_id, business_id, status) VALUES ($1,$2,'pending')",
       [req.user.id, Number(business_id)]
     );
+    notifyDataChanged("requests", { action: "join_request", worker_id: req.user.id, business_id: Number(business_id) });
     res.json({ ok: true });
   } catch (e) {
     if (String(e.message).includes("duplicate key")) return res.status(409).json({ error: "Already requested" });
     console.error(e);
     res.status(500).json({ error: "Server error" });
   }
+});
+
+app.get("/api/worker/requests", requireRole("worker"), async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT
+      wr.id,
+      wr.business_id,
+      b.name AS business_name,
+      wr.status,
+      wr.created_at
+     FROM worker_requests wr
+     JOIN businesses b ON b.id = wr.business_id
+     WHERE wr.worker_id = $1
+     ORDER BY wr.created_at DESC`,
+    [req.user.id]
+  );
+
+  res.json(rows);
 });
 
 /* Owner */
@@ -356,7 +444,20 @@ app.post("/api/owner/businesses", requireRole("owner"), async (req, res) => {
     [req.user.id, name, category, location]
   );
 
+  notifyDataChanged("businesses", { action: "created", owner_id: req.user.id });
   res.json({ ok: true });
+});
+
+app.get("/api/owner/businesses", requireRole("owner"), async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT id, name, category, location
+     FROM businesses
+     WHERE owner_id=$1
+     ORDER BY created_at DESC`,
+    [req.user.id]
+  );
+
+  res.json(rows);
 });
 
 app.get("/api/owner/requests", requireRole("owner"), async (req, res) => {
@@ -394,6 +495,7 @@ app.post("/api/owner/requests/:id/decision", requireRole("owner"), async (req, r
   if (!rows.length) return res.status(404).json({ error: "Request not found" });
 
   await pool.query("UPDATE worker_requests SET status=$1 WHERE id=$2", [newStatus, requestId]);
+  notifyDataChanged("requests", { action: "owner_decision", request_id: requestId, status: newStatus });
   res.json({ ok: true });
 });
 
@@ -460,6 +562,11 @@ app.post("/api/admin/workers/:id/decision", requireRole("admin"), async (req, re
     [approve ? "ready" : "pending", workerId]
   );
 
+  notifyDataChanged("workers", {
+    action: "admin_decision",
+    worker_id: workerId,
+    status: approve ? "ready" : "pending"
+  });
   res.json({ ok: true });
 });
 
@@ -488,6 +595,7 @@ app.post("/api/owner/workers/:workerId/status", requireRole("owner"), async (req
     [status, workerId]
   );
 
+  notifyDataChanged("workers", { action: "owner_status_update", worker_id: workerId, status });
   res.json({ ok: true });
 });
 

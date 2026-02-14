@@ -2,11 +2,13 @@ import Navbar from "./Navbar";
 
 export default function Layout({ children }) {
   return (
-    <>
+    <div className="app-frame">
       <Navbar />
-      <main className="mx-auto max-w-5xl px-4 py-6">
-        {children}
+      <div className="bg-aurora" />
+      <div className="bg-mesh" />
+      <main className="shell app-main">
+        <div className="fade-in">{children}</div>
       </main>
-    </>
+    </div>
   );
 }

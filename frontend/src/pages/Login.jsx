@@ -8,18 +8,17 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
-
   const nav = useNavigate();
   const auth = useAuth();
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setErr("");
     setLoading(true);
+    setErr("");
     try {
       const data = await api.login(email, password);
-      auth.login({ name: data.name, role: data.role });
-      nav("/businesses");
+      auth.login({ name: data.name, role: data.role, email });
+      nav("/dashboard");
     } catch (e2) {
       setErr(e2.message);
     } finally {
@@ -28,53 +27,36 @@ export default function Login() {
   };
 
   return (
-    <div className="mx-auto max-w-md">
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold">Login</h1>
-        <p className="mt-1 text-sm text-slate-600">Welcome back. Please enter your details.</p>
+    <section className="auth-wrap auth-wrap-glass">
+      <div className="glass-login-card">
+        <h2>Login</h2>
+        <p className="auth-sub">Default admin: admin@workhub.local / admin123</p>
 
-        {err && <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>}
+        {err && <div className="alert">{err}</div>}
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <div>
-            <label className="text-sm font-medium text-slate-700">Email</label>
-            <input
-              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-slate-200"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        <form onSubmit={onSubmit} className="auth-form-glass">
+          <div className="input-group-float">
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <label htmlFor="email">Email</label>
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-slate-700">Password</label>
-            <input
-              type="password"
-              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-slate-200"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <div className="input-group-float">
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <label htmlFor="password">Password</label>
           </div>
 
-          <button
-            disabled={loading}
-            className="w-full rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-          >
-            {loading ? "Logging in..." : "Login"}
+          <button disabled={loading} className="btn-login-glass">
+            {loading ? "Signing in..." : "Login"}
           </button>
-
-          <p className="text-center text-sm text-slate-600">
-            Don’t have an account?{" "}
-            <Link className="font-semibold text-slate-900 hover:underline" to="/register">
-              Register
-            </Link>
-          </p>
         </form>
+
+        <div className="footer-glass">
+          Do not have an account?{" "}
+          <Link to="/register">
+            Register
+          </Link>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
