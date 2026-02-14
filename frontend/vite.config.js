@@ -8,6 +8,12 @@ const noEsbuild = process.env.WORKHUB_NO_ESBUILD === '1'
 export default defineConfig({
   plugins: [react()],
   esbuild: noEsbuild ? false : undefined,
+  optimizeDeps: noEsbuild
+    ? {
+        noDiscovery: true,
+        include: [],
+      }
+    : undefined,
   build: noEsbuild
     ? {
         target: 'esnext',

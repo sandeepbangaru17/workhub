@@ -2,7 +2,8 @@
   "name": "workhub",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix backend run dev",
+    "dev": "cmd /c \"start \"backend\" /B npm.cmd --prefix backend run dev & npm.cmd --prefix frontend run dev\"",
+    "dev:safe": "cmd /c \"start \"backend\" /B npm.cmd --prefix backend run dev & npm.cmd --prefix frontend run dev:safe\"",
     "start": "npm --prefix backend start"
   }
 }

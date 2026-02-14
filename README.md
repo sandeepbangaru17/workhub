@@ -63,5 +63,6 @@ npm --prefix frontend run build:safe
 
 ## Notes
 
-- Root `npm run dev` starts only the backend via the root `package.json` script.
+- Root `npm run dev` starts backend + frontend together (normal Vite mode).
+- Root `npm run dev:safe` starts backend + frontend with the safe frontend mode.
 - The frontend uses cookie-based sessions (`credentials: include`) with the backend API.
