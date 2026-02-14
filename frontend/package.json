@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:safe": "node ./scripts/vite-safe.mjs dev",
     "build": "vite build",
+    "build:safe": "node ./scripts/vite-safe.mjs build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:safe": "node ./scripts/vite-safe.mjs preview"
   },
   "dependencies": {
     "react": "^19.2.0",

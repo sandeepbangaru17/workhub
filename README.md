@@ -55,6 +55,12 @@ npm --prefix frontend run dev
 
 Frontend URL: usually `http://localhost:5173`
 
+If your Windows environment blocks child process spawns (`spawn EPERM` from Vite/esbuild), use:
+```bash
+npm --prefix frontend run dev:safe
+npm --prefix frontend run build:safe
+```
+
 ## Notes
 
 - Root `npm run dev` starts only the backend via the root `package.json` script.
