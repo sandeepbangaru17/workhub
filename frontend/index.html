@@ -1234,10 +1234,16 @@
     async function refreshAdmin(){
       const biz = await api("/api/admin/businesses");
       renderAdminBusinesses(biz);
-
-      const pending = await api("/api/admin/workers/pending");
-      renderAdminPending(pending);
+    
+      try{
+        const pending = await api("/api/admin/workers/pending");
+        renderAdminPending(pending);
+      }catch(e){
+        // Backend route not ready or permission issue
+        renderAdminPending([]);
+      }
     }
+   
 
     // Owner actions
     window.ownerApprove = async function(requestId, ok){
